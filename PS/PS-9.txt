@@ -1,0 +1,683 @@
+PROBLEM STATEMENT 9
+MONGODB DATABASE CONNECTIVITY WITH FRONT-END LANGUAGE
+Ubuntu Practical - Python 3 + MongoDB + PyMongo
+
+AIM
+To connect a Python 3 program with MongoDB and perform database
+navigation operations such as Add, Display, Search, Edit and Delete.
+
+This is a simple menu-driven Python program. Python is used as the
+front-end language and PyMongo is used to connect Python with MongoDB.
+
+============================================================
+1. REQUIREMENTS
+============================================================
+
+1. Ubuntu operating system
+2. MongoDB Community Server
+3. Python 3
+4. PyMongo Python library
+
+NOTE:
+The commands below assume MongoDB Community Server is installed.
+If the command "mongosh" or the service "mongod" is not found,
+install MongoDB Community Server for your Ubuntu version using the
+official MongoDB installation instructions:
+https://www.mongodb.com/docs/manual/administration/install-on-linux/
+
+============================================================
+2. CHECK AND START MONGODB
+============================================================
+
+Open the Ubuntu Terminal.
+
+Check Python version:
+
+python3 --version
+
+Check MongoDB Shell:
+
+mongosh --version
+
+Start MongoDB service:
+
+sudo systemctl start mongod
+
+Enable MongoDB to start automatically when Ubuntu starts:
+
+sudo systemctl enable mongod
+
+Check MongoDB service status:
+
+sudo systemctl status mongod
+
+If the service is active (running), MongoDB is running.
+
+Open MongoDB Shell:
+
+mongosh
+
+Check the server:
+
+db.runCommand({ ping: 1 })
+
+If the result contains "ok: 1", the connection is working.
+
+Exit MongoDB Shell:
+
+exit
+
+============================================================
+3. INSTALL PYTHON AND PYMONGO
+============================================================
+
+Install Python 3 (if it is not already installed):
+
+sudo apt update
+sudo apt install python3 -y
+
+Install PyMongo:
+
+sudo apt install python3-pymongo -y
+
+Check whether PyMongo is installed:
+
+python3 -c "import pymongo; print(pymongo.version)"
+
+If a version number is displayed, PyMongo is installed.
+
+============================================================
+4. CREATE DATABASE AND COLLECTION IN MONGODB
+============================================================
+
+Open MongoDB Shell:
+
+mongosh
+
+Create or switch to the database:
+
+use college
+
+Create the student collection:
+
+db.createCollection("student")
+
+Insert sample records:
+
+db.student.insertMany([
+    {id: 1, name: "Aarav", city: "Pune"},
+    {id: 2, name: "Diya", city: "Mumbai"},
+    {id: 3, name: "Ishaan", city: "Nashik"},
+    {id: 4, name: "Meera", city: "Pune"},
+    {id: 5, name: "Rohan", city: "Thane"}
+])
+
+Display all records:
+
+db.student.find()
+
+Exit MongoDB Shell:
+
+exit
+
+NOTE:
+The Python program below also creates the database and collection
+automatically when it inserts the first record. You may use the
+sample records above to prepare the database before running Python,
+or start with an empty collection and add records through the menu.
+Do not insert the sample records twice if you do not want duplicates.
+
+============================================================
+5. CREATE THE PYTHON PROGRAM
+============================================================
+
+Create a Python file:
+
+nano mongodb_crud.py
+
+Type or paste the complete program below.
+
+---------------------- PYTHON CODE ----------------------------
+
+from pymongo import MongoClient
+
+# Connect Python with MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+
+# Select database and collection
+db = client["college"]
+students = db["student"]
+
+# Make student ID unique
+students.create_index("id", unique=True)
+
+while True:
+    print("\n===== STUDENT DATABASE =====")
+    print("1. Add Student")
+    print("2. Display All Students")
+    print("3. Search Student")
+    print("4. Update Student")
+    print("5. Delete Student")
+    print("6. Exit")
+
+    choice = input("Enter your choice: ")
+
+    # ADD
+    if choice == "1":
+        try:
+            sid = int(input("Enter student ID: "))
+            name = input("Enter student name: ")
+            city = input("Enter student city: ")
+
+            students.insert_one({
+                "id": sid,
+                "name": name,
+                "city": city
+            })
+
+            print("Student added successfully!")
+
+        except ValueError:
+            print("Student ID must be a number.")
+
+        except Exception as e:
+            print("Error:", e)
+
+    # DISPLAY
+    elif choice == "2":
+        print("\nStudent Records:")
+
+        for student in students.find({}, {"_id": 0}):
+            print(student)
+
+    # SEARCH
+    elif choice == "3":
+        try:
+            sid = int(input("Enter student ID to search: "))
+            student = students.find_one(
+                {"id": sid},
+                {"_id": 0}
+            )
+
+            if student:
+                print("Student found:", student)
+            else:
+                print("Student not found.")
+
+        except ValueError:
+            print("Student ID must be a number.")
+
+    # UPDATE
+    elif choice == "4":
+        try:
+            sid = int(input("Enter student ID to update: "))
+            name = input("Enter new name: ")
+            city = input("Enter new city: ")
+
+            result = students.update_one(
+                {"id": sid},
+                {"$set": {"name": name, "city": city}}
+            )
+
+            if result.matched_count > 0:
+                print("Student updated successfully!")
+            else:
+                print("Student not found.")
+
+        except ValueError:
+            print("Student ID must be a number.")
+
+    # DELETE
+    elif choice == "5":
+        try:
+            sid = int(input("Enter student ID to delete: "))
+
+            result = students.delete_one({"id": sid})
+
+            if result.deleted_count > 0:
+                print("Student deleted successfully!")
+            else:
+                print("Student not found.")
+
+        except ValueError:
+            print("Student ID must be a number.")
+
+    # EXIT
+    elif choice == "6":
+        print("Program closed.")
+        break
+
+    else:
+        print("Invalid choice. Please enter 1 to 6.")
+
+# Close MongoDB connection
+client.close()
+
+-------------------- END OF PYTHON CODE -----------------------
+
+Save the file in nano:
+
+Press CTRL + O
+Press ENTER
+Press CTRL + X
+
+============================================================
+6. RUN THE PYTHON PROGRAM
+============================================================
+
+Make sure MongoDB is running:
+
+sudo systemctl start mongod
+
+Run the Python program:
+
+python3 mongodb_crud.py
+
+The menu will appear:
+
+===== STUDENT DATABASE =====
+1. Add Student
+2. Display All Students
+3. Search Student
+4. Update Student
+5. Delete Student
+6. Exit
+
+Enter your choice:
+
+============================================================
+7. SAMPLE EXECUTION
+============================================================
+
+A. ADD STUDENT
+
+Enter your choice: 1
+Enter student ID: 6
+Enter student name: Kiara
+Enter student city: Pune
+
+Output:
+Student added successfully!
+
+B. DISPLAY ALL STUDENTS
+
+Enter your choice: 2
+
+Output (example):
+{'id': 1, 'name': 'Aarav', 'city': 'Pune'}
+{'id': 2, 'name': 'Diya', 'city': 'Mumbai'}
+{'id': 3, 'name': 'Ishaan', 'city': 'Nashik'}
+{'id': 4, 'name': 'Meera', 'city': 'Pune'}
+{'id': 5, 'name': 'Rohan', 'city': 'Thane'}
+{'id': 6, 'name': 'Kiara', 'city': 'Pune'}
+
+C. SEARCH STUDENT
+
+Enter your choice: 3
+Enter student ID to search: 2
+
+Output:
+Student found: {'id': 2, 'name': 'Diya', 'city': 'Mumbai'}
+
+D. UPDATE STUDENT
+
+Enter your choice: 4
+Enter student ID to update: 2
+Enter new name: Diya Sharma
+Enter new city: Pune
+
+Output:
+Student updated successfully!
+
+E. DELETE STUDENT
+
+Enter your choice: 5
+Enter student ID to delete: 6
+
+Output:
+Student deleted successfully!
+
+F. EXIT
+
+Enter your choice: 6
+
+Output:
+Program closed.
+
+NOTE:
+Sample output depends on the records currently stored in your
+MongoDB collection.
+
+============================================================
+8. MONGODB SHELL COMMANDS FOR VERIFICATION
+============================================================
+
+Open MongoDB Shell:
+
+mongosh
+
+Select database:
+
+use college
+
+Display all student records:
+
+db.student.find()
+
+Display records in a readable format:
+
+db.student.find().pretty()
+
+Find a student by ID:
+
+db.student.findOne({id: 2})
+
+Add a student:
+
+db.student.insertOne({
+    id: 7,
+    name: "Kabir",
+    city: "Nagpur"
+})
+
+Update a student:
+
+db.student.updateOne(
+    {id: 7},
+    {$set: {city: "Mumbai"}}
+)
+
+Delete a student:
+
+db.student.deleteOne({id: 7})
+
+Count total students:
+
+db.student.countDocuments()
+
+Display all databases:
+
+show dbs
+
+Display collections in the current database:
+
+show collections
+
+Exit MongoDB Shell:
+
+exit
+
+============================================================
+9. IMPORTANT PYTHON AND MONGODB COMMANDS
+============================================================
+
+MongoClient:
+Used to establish a connection between Python and MongoDB.
+
+Example:
+client = MongoClient("mongodb://localhost:27017/")
+
+Database:
+Selects the database.
+
+Example:
+db = client["college"]
+
+Collection:
+Selects the collection.
+
+Example:
+students = db["student"]
+
+insert_one():
+Inserts one document into a collection.
+
+find():
+Displays matching documents.
+
+find_one():
+Finds one matching document.
+
+update_one():
+Updates one matching document.
+
+$set:
+Updates the specified fields without replacing the complete document.
+
+delete_one():
+Deletes one matching document.
+
+create_index():
+Creates an index on a field.
+
+unique=True:
+Prevents duplicate values in the indexed field.
+
+matched_count:
+Tells how many documents matched an update condition.
+
+deleted_count:
+Tells how many documents were deleted.
+
+client.close():
+Closes the MongoDB connection.
+
+============================================================
+10. IMPORTANT VIVA QUESTIONS WITH EASY ANSWERS
+============================================================
+
+1. What is MongoDB?
+   MongoDB is a NoSQL, document-oriented database that stores data
+   in flexible BSON documents.
+
+2. What is NoSQL?
+   NoSQL means Not Only SQL. It refers to databases that do not
+   primarily use the traditional relational table model.
+
+3. What is a document in MongoDB?
+   A document is a record stored as key-value pairs.
+
+4. What is a collection?
+   A collection is a group of MongoDB documents. It is similar to
+   a table in a relational database.
+
+5. What is a database?
+   A database contains collections.
+
+6. What is BSON?
+   BSON stands for Binary JSON. MongoDB uses BSON to store documents.
+
+7. What is PyMongo?
+   PyMongo is the Python library used to connect Python programs
+   with MongoDB.
+
+8. What is MongoClient?
+   MongoClient creates a connection between Python and MongoDB.
+
+9. What is the default MongoDB port?
+   The default MongoDB port is 27017.
+
+10. What is CRUD?
+    CRUD stands for Create, Read, Update and Delete.
+
+11. Which method is used to insert a document?
+    insert_one() inserts one document.
+
+12. Which method is used to display records?
+    find() is used to retrieve documents.
+
+13. What is the difference between find() and find_one()?
+    find() retrieves all matching documents as a cursor.
+    find_one() retrieves only one matching document.
+
+14. Which method is used to update a document?
+    update_one() updates one matching document.
+
+15. What is $set?
+    $set changes the value of specified fields.
+
+16. Which method is used to delete a document?
+    delete_one() deletes one matching document.
+
+17. What is _id in MongoDB?
+    _id is the unique identifier automatically added to each
+    document if it is not supplied.
+
+18. Is MongoDB schema-free?
+    MongoDB has a flexible schema. Documents in one collection
+    do not have to contain exactly the same fields.
+
+19. What is the difference between SQL and MongoDB?
+    SQL databases generally store data in tables and rows.
+    MongoDB stores data in collections and documents.
+
+20. Why do we use create_index("id", unique=True)?
+    It creates a unique index so duplicate student IDs are rejected.
+
+21. What does localhost mean?
+    It refers to the same computer on which the program is running.
+
+22. What is the purpose of client.close()?
+    It closes the connection between Python and MongoDB.
+
+23. What is mongosh?
+    It is the MongoDB Shell used to execute MongoDB commands.
+
+24. What is the purpose of systemctl start mongod?
+    It starts the MongoDB server service.
+
+25. What is the difference between insert_one() and insert_many()?
+    insert_one() inserts one document; insert_many() inserts
+    multiple documents.
+
+============================================================
+11. COMMON ERRORS AND SOLUTIONS
+============================================================
+
+ERROR 1: ModuleNotFoundError: No module named 'pymongo'
+
+Solution:
+
+sudo apt install python3-pymongo -y
+
+ERROR 2: Connection refused
+
+Possible reason:
+MongoDB server is not running.
+
+Solution:
+
+sudo systemctl start mongod
+sudo systemctl status mongod
+
+ERROR 3: Unit mongod.service could not be found
+
+Possible reason:
+MongoDB Community Server is not installed or its service is not
+registered.
+
+Solution:
+Install MongoDB Community Server for your Ubuntu version using
+the official MongoDB installation instructions.
+
+ERROR 4: DuplicateKeyError
+
+Possible reason:
+The student ID already exists because the id field has a unique
+index.
+
+Solution:
+Enter a different student ID.
+
+ERROR 5: SyntaxError
+
+Possible reason:
+The Python code was typed incorrectly.
+
+Solution:
+Open the file again:
+
+nano mongodb_crud.py
+
+Check indentation and spelling. Python uses indentation to define
+blocks of code.
+
+============================================================
+12. COMPLETE EXECUTION ORDER - PRACTICAL EXAM
+============================================================
+
+1. Open Ubuntu Terminal.
+2. Check Python:
+
+   python3 --version
+
+3. Start MongoDB:
+
+   sudo systemctl start mongod
+
+4. Install PyMongo if needed:
+
+   sudo apt install python3-pymongo -y
+
+5. Create the Python file:
+
+   nano mongodb_crud.py
+
+6. Type or paste the complete Python program.
+7. Save using CTRL + O, ENTER, and CTRL + X.
+8. Run the program:
+
+   python3 mongodb_crud.py
+
+9. Select menu option 1 to add a student.
+10. Select option 2 to display all students.
+11. Select option 3 to search for a student.
+12. Select option 4 to edit student details.
+13. Select option 5 to delete a student.
+14. Select option 6 to exit.
+15. Verify records using mongosh if required.
+
+============================================================
+13. HOW TO REMEMBER THE PROGRAM
+============================================================
+
+Remember the order:
+
+1. IMPORT
+   from pymongo import MongoClient
+
+2. CONNECT
+   client = MongoClient("mongodb://localhost:27017/")
+
+3. DATABASE
+   db = client["college"]
+
+4. COLLECTION
+   students = db["student"]
+
+5. ADD
+   students.insert_one({...})
+
+6. DISPLAY
+   students.find()
+
+7. SEARCH
+   students.find_one({...})
+
+8. EDIT
+   students.update_one({...}, {"$set": {...}})
+
+9. DELETE
+   students.delete_one({...})
+
+10. CLOSE
+    client.close()
+
+Easy memory trick:
+ADD = insert_one()
+DISPLAY = find()
+SEARCH = find_one()
+EDIT = update_one()
+DELETE = delete_one()
+
+END OF PRACTICAL FILE

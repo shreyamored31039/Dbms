@@ -1,0 +1,611 @@
+PROBLEM STATEMENT 11 - BANK DATABASE
+Oracle SQL / SQL*Plus - Complete Practical File
+
+AIM
+Create the Bank database tables with suitable constraints, insert
+sample records, and execute the given SQL queries.
+
+SCHEMA
+Account(Acc_no, branch_name, balance)
+Branch(branch_name, branch_city, assets)
+Customer(cust_name, cust_street, cust_city)
+Depositor(cust_name, acc_no)
+Loan(loan_no, branch_name, amount)
+Borrower(cust_name, loan_no)
+
+============================================================
+1. START ORACLE SQL*PLUS
+============================================================
+
+Open Ubuntu Terminal and connect to Oracle:
+
+sqlplus username/password
+
+Example:
+sqlplus system/your_password
+
+When the SQL> prompt appears, execute the following commands.
+
+Check connected user:
+
+SHOW USER;
+
+============================================================
+2. CREATE TABLES WITH CONSTRAINTS
+============================================================
+
+Create Branch first because Account and Loan refer to Branch.
+
+CREATE TABLE Branch (
+    branch_name VARCHAR2(30),
+    branch_city VARCHAR2(30),
+    assets      NUMBER(12,2),
+    CONSTRAINT pk_branch PRIMARY KEY (branch_name)
+);
+
+Create Customer:
+
+CREATE TABLE Customer (
+    cust_name   VARCHAR2(40),
+    cust_street VARCHAR2(50),
+    cust_city   VARCHAR2(30),
+    CONSTRAINT pk_customer PRIMARY KEY (cust_name)
+);
+
+Create Account:
+
+CREATE TABLE Account (
+    acc_no      NUMBER(10),
+    branch_name VARCHAR2(30) NOT NULL,
+    balance     NUMBER(12,2) DEFAULT 0 NOT NULL,
+    CONSTRAINT pk_account PRIMARY KEY (acc_no),
+    CONSTRAINT fk_account_branch FOREIGN KEY (branch_name)
+        REFERENCES Branch(branch_name),
+    CONSTRAINT chk_account_balance CHECK (balance >= 0)
+);
+
+Create Depositor:
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR2(40),
+    acc_no    NUMBER(10),
+    CONSTRAINT pk_depositor PRIMARY KEY (cust_name, acc_no),
+    CONSTRAINT fk_depositor_customer FOREIGN KEY (cust_name)
+        REFERENCES Customer(cust_name),
+    CONSTRAINT fk_depositor_account FOREIGN KEY (acc_no)
+        REFERENCES Account(acc_no)
+);
+
+Create Loan:
+
+CREATE TABLE Loan (
+    loan_no     NUMBER(10),
+    branch_name VARCHAR2(30) NOT NULL,
+    amount      NUMBER(12,2) NOT NULL,
+    CONSTRAINT pk_loan PRIMARY KEY (loan_no),
+    CONSTRAINT fk_loan_branch FOREIGN KEY (branch_name)
+        REFERENCES Branch(branch_name),
+    CONSTRAINT chk_loan_amount CHECK (amount > 0)
+);
+
+Create Borrower:
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR2(40),
+    loan_no   NUMBER(10),
+    CONSTRAINT pk_borrower PRIMARY KEY (cust_name, loan_no),
+    CONSTRAINT fk_borrower_customer FOREIGN KEY (cust_name)
+        REFERENCES Customer(cust_name),
+    CONSTRAINT fk_borrower_loan FOREIGN KEY (loan_no)
+        REFERENCES Loan(loan_no)
+);
+
+IMPORTANT:
+- Create parent tables Branch and Customer before their child tables.
+- Account.branch_name and Loan.branch_name reference Branch.
+- Depositor references Customer and Account.
+- Borrower references Customer and Loan.
+- Composite primary keys prevent duplicate customer-account and
+  customer-loan pairs.
+- The street column is allowed to contain NULL because Query 8 asks
+  for customers whose street address is not available.
+- The branch_city column is allowed to contain NULL because Query 9
+  asks for branches where branch city is available.
+
+Check table structures:
+
+DESC Branch;
+DESC Customer;
+DESC Account;
+DESC Depositor;
+DESC Loan;
+DESC Borrower;
+
+============================================================
+3. INSERT SUITABLE DATA
+============================================================
+
+Insert Branch records:
+
+INSERT INTO Branch VALUES ('Akurdi', 'Pune', 15000000);
+INSERT INTO Branch VALUES ('Chinchwad', 'Pune', 18000000);
+INSERT INTO Branch VALUES ('Nigdi', 'Pune', 12000000);
+INSERT INTO Branch VALUES ('Pimpri', 'Pune', 20000000);
+INSERT INTO Branch VALUES ('Mumbai Central', 'Mumbai', 30000000);
+INSERT INTO Branch VALUES ('Satara', NULL, 9000000);
+
+Insert Customer records:
+
+INSERT INTO Customer VALUES ('Aarav', 'MG Road', 'Pune');
+INSERT INTO Customer VALUES ('Anaya', 'FC Road', 'Pune');
+INSERT INTO Customer VALUES ('Diya', 'Station Road', 'Mumbai');
+INSERT INTO Customer VALUES ('Ishaan', NULL, 'Nashik');
+INSERT INTO Customer VALUES ('Meera', 'Shivaji Nagar', 'Pune');
+INSERT INTO Customer VALUES ('Rohan', 'Main Street', 'Pimpri');
+INSERT INTO Customer VALUES ('Sana', NULL, 'Mumbai');
+INSERT INTO Customer VALUES ('Kabir', 'Akurdi Road', 'Pune');
+INSERT INTO Customer VALUES ('Vivaan', 'Sector 5', 'Pimpri');
+INSERT INTO Customer VALUES ('Kiara', 'College Road', 'Pune');
+
+Insert Account records:
+
+INSERT INTO Account VALUES (1001, 'Akurdi', 15000);
+INSERT INTO Account VALUES (1002, 'Akurdi', 18000);
+INSERT INTO Account VALUES (1003, 'Chinchwad', 10000);
+INSERT INTO Account VALUES (1004, 'Chinchwad', 16000);
+INSERT INTO Account VALUES (1005, 'Nigdi', 9000);
+INSERT INTO Account VALUES (1006, 'Pimpri', 20000);
+INSERT INTO Account VALUES (1007, 'Mumbai Central', 25000);
+INSERT INTO Account VALUES (1008, 'Chinchwad', 14000);
+INSERT INTO Account VALUES (1009, 'Akurdi', 12000);
+INSERT INTO Account VALUES (1010, 'Pimpri', 17000);
+
+Insert Depositor records:
+
+INSERT INTO Depositor VALUES ('Aarav', 1001);
+INSERT INTO Depositor VALUES ('Anaya', 1002);
+INSERT INTO Depositor VALUES ('Diya', 1007);
+INSERT INTO Depositor VALUES ('Ishaan', 1003);
+INSERT INTO Depositor VALUES ('Meera', 1004);
+INSERT INTO Depositor VALUES ('Rohan', 1006);
+INSERT INTO Depositor VALUES ('Sana', 1007);
+INSERT INTO Depositor VALUES ('Kabir', 1008);
+INSERT INTO Depositor VALUES ('Vivaan', 1009);
+INSERT INTO Depositor VALUES ('Kiara', 1010);
+
+Insert Loan records.
+The sample data includes loan amounts below, within, and above
+the range 1300 to 1500 for Query 7:
+
+INSERT INTO Loan VALUES (2001, 'Akurdi', 15000);
+INSERT INTO Loan VALUES (2002, 'Akurdi', 12500);
+INSERT INTO Loan VALUES (2003, 'Chinchwad', 1400);
+INSERT INTO Loan VALUES (2004, 'Chinchwad', 1500);
+INSERT INTO Loan VALUES (2005, 'Nigdi', 1300);
+INSERT INTO Loan VALUES (2006, 'Pimpri', 18000);
+INSERT INTO Loan VALUES (2007, 'Mumbai Central', 25000);
+INSERT INTO Loan VALUES (2008, 'Akurdi', 1450);
+INSERT INTO Loan VALUES (2009, 'Pimpri', 11000);
+INSERT INTO Loan VALUES (2010, 'Chinchwad', 16000);
+
+Insert Borrower records:
+
+INSERT INTO Borrower VALUES ('Aarav', 2001);
+INSERT INTO Borrower VALUES ('Anaya', 2002);
+INSERT INTO Borrower VALUES ('Diya', 2007);
+INSERT INTO Borrower VALUES ('Ishaan', 2003);
+INSERT INTO Borrower VALUES ('Meera', 2004);
+INSERT INTO Borrower VALUES ('Rohan', 2006);
+INSERT INTO Borrower VALUES ('Sana', 2007);
+INSERT INTO Borrower VALUES ('Kabir', 2005);
+INSERT INTO Borrower VALUES ('Vivaan', 2009);
+INSERT INTO Borrower VALUES ('Kiara', 2008);
+
+Save the records:
+
+COMMIT;
+
+Display all records:
+
+SELECT * FROM Branch;
+SELECT * FROM Customer;
+SELECT * FROM Account;
+SELECT * FROM Depositor;
+SELECT * FROM Loan;
+SELECT * FROM Borrower;
+
+============================================================
+4. SQL QUERIES
+============================================================
+
+QUERY 1:
+Modify the assets attribute of the Branch table to Property.
+
+In Oracle, use RENAME COLUMN:
+
+ALTER TABLE Branch
+RENAME COLUMN assets TO Property;
+
+Check the changed table structure:
+
+DESC Branch;
+
+Display branch records:
+
+SELECT * FROM Branch;
+
+NOTE:
+Oracle uses RENAME COLUMN to rename an existing column.
+Do not use CHANGE COLUMN; that syntax belongs to some other
+database systems.
+
+------------------------------------------------------------
+QUERY 2:
+Find all loan numbers for loans made at Akurdi branch with a
+loan amount greater than 12,000.
+
+SELECT loan_no
+FROM Loan
+WHERE branch_name = 'Akurdi'
+AND amount > 12000;
+
+------------------------------------------------------------
+QUERY 3:
+Find the average account balance at each branch.
+
+SELECT branch_name,
+       AVG(balance) AS average_balance
+FROM Account
+GROUP BY branch_name
+ORDER BY branch_name;
+
+Explanation:
+AVG() calculates the average balance.
+GROUP BY calculates the average separately for each branch.
+
+------------------------------------------------------------
+QUERY 4:
+Find branches where the average account balance is greater
+than 12,000.
+
+SELECT branch_name,
+       AVG(balance) AS average_balance
+FROM Account
+GROUP BY branch_name
+HAVING AVG(balance) > 12000
+ORDER BY branch_name;
+
+Explanation:
+HAVING is used because the condition is applied to the result of
+the aggregate function AVG() for each group.
+
+------------------------------------------------------------
+QUERY 5:
+Find the number of tuples in the Customer relation.
+
+SELECT COUNT(*) AS total_customers
+FROM Customer;
+
+Explanation:
+COUNT(*) counts all rows in the Customer table.
+Tuple means row or record.
+
+------------------------------------------------------------
+QUERY 6:
+Calculate the total loan amount given by the bank.
+
+SELECT SUM(amount) AS total_loan_amount
+FROM Loan;
+
+Explanation:
+SUM() adds all values in the amount column.
+
+------------------------------------------------------------
+QUERY 7:
+Delete all loans with a loan amount between 1,300 and 1,500.
+
+First display the records that will be deleted:
+
+SELECT *
+FROM Loan
+WHERE amount BETWEEN 1300 AND 1500;
+
+Delete those loans:
+
+DELETE FROM Loan
+WHERE amount BETWEEN 1300 AND 1500;
+
+Save the deletion:
+
+COMMIT;
+
+Verify the remaining loan records:
+
+SELECT * FROM Loan;
+
+IMPORTANT:
+BETWEEN includes both boundary values. Therefore, loans with
+amount 1300 and 1500 are also deleted.
+
+The sample data contains loans of 1300, 1400, 1450 and 1500.
+All four satisfy the BETWEEN condition.
+
+NOTE ABOUT FOREIGN KEYS:
+Borrower.loan_no references Loan.loan_no. If a loan is referenced
+by a Borrower record, Oracle will prevent deleting that loan while
+the referencing Borrower row exists.
+
+For the sample data, delete the matching Borrower records first:
+
+DELETE FROM Borrower
+WHERE loan_no IN (
+    SELECT loan_no
+    FROM Loan
+    WHERE amount BETWEEN 1300 AND 1500
+);
+
+Then delete the loans:
+
+DELETE FROM Loan
+WHERE amount BETWEEN 1300 AND 1500;
+
+COMMIT;
+
+------------------------------------------------------------
+QUERY 8:
+Find customers whose street address is not available.
+
+SELECT *
+FROM Customer
+WHERE cust_street IS NULL;
+
+Explanation:
+IS NULL checks for missing values.
+Do not write cust_street = NULL.
+
+------------------------------------------------------------
+QUERY 9:
+Find branches where the branch city is available.
+
+SELECT *
+FROM Branch
+WHERE branch_city IS NOT NULL;
+
+Explanation:
+IS NOT NULL selects rows where branch_city contains a value.
+
+------------------------------------------------------------
+QUERY 10:
+Find names of customers whose names start with letter 'A'.
+
+SELECT cust_name
+FROM Customer
+WHERE cust_name LIKE 'A%';
+
+Explanation:
+LIKE is used for pattern matching.
+'A%' means the name starts with A and can be followed by any
+number of characters.
+
+============================================================
+5. USEFUL SQL*PLUS COMMANDS
+============================================================
+
+Show current connected user:
+
+SHOW USER;
+
+Display all tables:
+
+SELECT table_name FROM user_tables;
+
+Check table structure:
+
+DESC Branch;
+DESC Customer;
+DESC Account;
+DESC Depositor;
+DESC Loan;
+DESC Borrower;
+
+Display all records:
+
+SELECT * FROM Branch;
+SELECT * FROM Customer;
+SELECT * FROM Account;
+SELECT * FROM Depositor;
+SELECT * FROM Loan;
+SELECT * FROM Borrower;
+
+Save changes:
+
+COMMIT;
+
+Undo changes that have not been committed:
+
+ROLLBACK;
+
+Exit SQL*Plus:
+
+EXIT;
+
+============================================================
+6. IMPORTANT SQL CONCEPTS
+============================================================
+
+PRIMARY KEY:
+Uniquely identifies each row. It cannot contain duplicate or NULL
+values.
+
+FOREIGN KEY:
+References a primary key or unique key in another table.
+
+NOT NULL:
+Prevents a column from storing NULL values.
+
+CHECK:
+Ensures values satisfy a specified condition.
+
+DEFAULT:
+Provides a value automatically when no value is supplied.
+
+ALTER TABLE:
+Changes the structure of an existing table.
+
+RENAME COLUMN:
+Changes the name of an existing column in Oracle.
+
+AVG():
+Calculates the average of numeric values.
+
+COUNT(*):
+Counts all rows, including rows containing NULL values in columns.
+
+SUM():
+Calculates the total of numeric values.
+
+GROUP BY:
+Groups rows with the same value.
+
+HAVING:
+Filters groups after GROUP BY.
+
+WHERE:
+Filters individual rows.
+
+BETWEEN:
+Checks whether a value lies within an inclusive range.
+
+IS NULL:
+Checks whether a value is missing.
+
+IS NOT NULL:
+Checks whether a value is present.
+
+LIKE:
+Matches a text pattern.
+
+%:
+Wildcard representing zero or more characters in a LIKE pattern.
+
+COMMIT:
+Permanently saves the current transaction changes.
+
+ROLLBACK:
+Reverses uncommitted transaction changes.
+
+============================================================
+7. IMPORTANT VIVA QUESTIONS WITH EASY ANSWERS
+============================================================
+
+1. What is a primary key?
+   A primary key uniquely identifies every record in a table.
+
+2. What is a foreign key?
+   A foreign key creates a relationship between two tables by
+   referring to a key in another table.
+
+3. What is a tuple?
+   A tuple is a row or record in a relational table.
+
+4. Which function counts rows?
+   COUNT(*) counts all rows in a table.
+
+5. Which function calculates average?
+   AVG() calculates the average of numeric values.
+
+6. Which function calculates total?
+   SUM() calculates the total of numeric values.
+
+7. What is GROUP BY?
+   It groups rows with the same values so aggregate functions can
+   be applied to each group.
+
+8. What is HAVING?
+   HAVING filters groups after GROUP BY.
+
+9. Difference between WHERE and HAVING?
+   WHERE filters rows before grouping; HAVING filters groups
+   after grouping.
+
+10. What is the use of BETWEEN?
+    It checks whether a value is within a specified range, including
+    both boundary values.
+
+11. Does BETWEEN include its boundary values?
+    Yes. BETWEEN 1300 AND 1500 includes 1300 and 1500.
+
+12. How do you check NULL values?
+    Use IS NULL or IS NOT NULL.
+
+13. Why should we not write = NULL?
+    NULL represents a missing or unknown value, so normal equality
+    comparison does not work. Use IS NULL.
+
+14. What is LIKE?
+    LIKE is used to search for a matching text pattern.
+
+15. What does 'A%' mean?
+    It matches strings starting with A.
+
+16. What is ALTER TABLE?
+    It modifies the structure of an existing table.
+
+17. How do you rename a column in Oracle?
+    ALTER TABLE table_name RENAME COLUMN old_name TO new_name;
+
+18. What is the difference between DELETE and DROP?
+    DELETE removes rows; DROP removes a database object.
+
+19. What is COMMIT?
+    COMMIT permanently saves transaction changes.
+
+20. What is ROLLBACK?
+    ROLLBACK reverses changes that have not been committed.
+
+21. Why can a loan deletion fail because of Borrower?
+    Borrower.loan_no is a foreign key referencing Loan.loan_no.
+    The referenced loan cannot be deleted while a borrower row
+    still refers to it, unless the foreign key allows cascading
+    deletion.
+
+============================================================
+8. COMPLETE EXECUTION ORDER FOR PRACTICAL EXAM
+============================================================
+
+1. Open Ubuntu Terminal.
+2. Connect to Oracle:
+
+   sqlplus username/password
+
+3. Create Branch table.
+4. Create Customer table.
+5. Create Account table.
+6. Create Depositor table.
+7. Create Loan table.
+8. Create Borrower table.
+9. Insert records into Branch and Customer.
+10. Insert records into Account and Loan.
+11. Insert records into Depositor and Borrower.
+12. Execute COMMIT.
+13. Display records using SELECT *.
+14. Execute Query 1 to rename assets to Property.
+15. Execute Queries 2 to 6.
+16. Before Query 7, check the matching loan records.
+17. Delete matching Borrower rows first because of the foreign key.
+18. Delete the matching Loan rows and execute COMMIT.
+19. Execute Queries 8, 9 and 10.
+20. Verify outputs and exit SQL*Plus.
+
+IMPORTANT PRACTICAL NOTES:
+- Run the table creation commands only once. If the tables already
+  exist, Oracle will report that the table name is already used.
+- Query 1 renames assets to Property. After renaming, use Property
+  instead of assets in later queries.
+- Query 7 deletes loans in the inclusive range 1300 to 1500.
+- Delete matching Borrower records before deleting referenced Loan
+  records, unless ON DELETE CASCADE was defined.
+- Queries 8 and 9 require nullable cust_street and branch_city
+  columns, so they are not declared NOT NULL in this practical.
+
+END OF PRACTICAL FILE

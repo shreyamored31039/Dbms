@@ -1,0 +1,593 @@
+PROBLEM STATEMENT 10 - BANK DATABASE
+Oracle SQL / SQL*Plus - Complete Practical File
+
+AIM
+Create the Bank database tables with appropriate constraints, insert
+suitable records, and execute the given SQL queries.
+
+SCHEMA
+Account(Acc_no, branch_name, balance)
+Branch(branch_name, branch_city, assets)
+Customer(cust_name, cust_street, cust_city)
+Depositor(cust_name, acc_no)
+Loan(loan_no, branch_name, amount)
+Borrower(cust_name, loan_no)
+
+============================================================
+1. START ORACLE SQL*PLUS
+============================================================
+
+Open the Ubuntu terminal and connect to Oracle:
+
+sqlplus username/password
+
+Example:
+sqlplus system/your_password
+
+When the SQL> prompt appears, execute the following SQL commands.
+
+Useful SQL*Plus commands:
+
+SHOW USER;
+SELECT table_name FROM user_tables;
+
+============================================================
+2. CREATE TABLES WITH CONSTRAINTS
+============================================================
+
+Create Branch first because Account and Loan reference it.
+
+CREATE TABLE Branch (
+    branch_name VARCHAR2(30),
+    branch_city VARCHAR2(30) NOT NULL,
+    assets      NUMBER(12,2) NOT NULL,
+    CONSTRAINT pk_branch PRIMARY KEY (branch_name)
+);
+
+Create Customer:
+
+CREATE TABLE Customer (
+    cust_name   VARCHAR2(40),
+    cust_street VARCHAR2(50) NOT NULL,
+    cust_city   VARCHAR2(30) NOT NULL,
+    CONSTRAINT pk_customer PRIMARY KEY (cust_name)
+);
+
+Create Account:
+
+CREATE TABLE Account (
+    acc_no      NUMBER(10),
+    branch_name VARCHAR2(30) NOT NULL,
+    balance     NUMBER(12,2) DEFAULT 0 NOT NULL,
+    CONSTRAINT pk_account PRIMARY KEY (acc_no),
+    CONSTRAINT fk_account_branch FOREIGN KEY (branch_name)
+        REFERENCES Branch(branch_name),
+    CONSTRAINT chk_account_balance CHECK (balance >= 0)
+);
+
+Create Depositor:
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR2(40),
+    acc_no    NUMBER(10),
+    CONSTRAINT pk_depositor PRIMARY KEY (cust_name, acc_no),
+    CONSTRAINT fk_depositor_customer FOREIGN KEY (cust_name)
+        REFERENCES Customer(cust_name),
+    CONSTRAINT fk_depositor_account FOREIGN KEY (acc_no)
+        REFERENCES Account(acc_no)
+);
+
+Create Loan:
+
+CREATE TABLE Loan (
+    loan_no     NUMBER(10),
+    branch_name VARCHAR2(30) NOT NULL,
+    amount      NUMBER(12,2) NOT NULL,
+    CONSTRAINT pk_loan PRIMARY KEY (loan_no),
+    CONSTRAINT fk_loan_branch FOREIGN KEY (branch_name)
+        REFERENCES Branch(branch_name),
+    CONSTRAINT chk_loan_amount CHECK (amount > 0)
+);
+
+Create Borrower:
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR2(40),
+    loan_no   NUMBER(10),
+    CONSTRAINT pk_borrower PRIMARY KEY (cust_name, loan_no),
+    CONSTRAINT fk_borrower_customer FOREIGN KEY (cust_name)
+        REFERENCES Customer(cust_name),
+    CONSTRAINT fk_borrower_loan FOREIGN KEY (loan_no)
+        REFERENCES Loan(loan_no)
+);
+
+NOTE:
+- Parent tables Branch and Customer are created before child tables.
+- Account.branch_name and Loan.branch_name reference Branch.
+- Depositor references Customer and Account.
+- Borrower references Customer and Loan.
+- Composite primary keys are used in Depositor and Borrower so that
+  the same customer-account or customer-loan pair cannot be repeated.
+
+Check table structures:
+
+DESC Branch;
+DESC Customer;
+DESC Account;
+DESC Depositor;
+DESC Loan;
+DESC Borrower;
+
+============================================================
+3. INSERT SUITABLE DATA
+============================================================
+
+Insert Branch records first:
+
+INSERT INTO Branch VALUES ('Akurdi', 'Pune', 15000000);
+INSERT INTO Branch VALUES ('Chinchwad', 'Pune', 18000000);
+INSERT INTO Branch VALUES ('Nigdi', 'Pune', 12000000);
+INSERT INTO Branch VALUES ('Pimpri', 'Pune', 20000000);
+INSERT INTO Branch VALUES ('Mumbai Central', 'Mumbai', 30000000);
+
+Insert Customer records:
+
+INSERT INTO Customer VALUES ('Aarav', 'MG Road', 'Pune');
+INSERT INTO Customer VALUES ('Diya', 'FC Road', 'Pune');
+INSERT INTO Customer VALUES ('Ishaan', 'Station Road', 'Mumbai');
+INSERT INTO Customer VALUES ('Meera', 'Shivaji Nagar', 'Pune');
+INSERT INTO Customer VALUES ('Rohan', 'Main Street', 'Pimpri');
+INSERT INTO Customer VALUES ('Sana', 'Link Road', 'Mumbai');
+INSERT INTO Customer VALUES ('Kabir', 'Akurdi Road', 'Pune');
+INSERT INTO Customer VALUES ('Anaya', 'Raviwar Peth', 'Nashik');
+INSERT INTO Customer VALUES ('Vivaan', 'Sector 5', 'Pimpri');
+INSERT INTO Customer VALUES ('Kiara', 'College Road', 'Pune');
+
+Insert Account records:
+
+INSERT INTO Account VALUES (1001, 'Akurdi', 65000);
+INSERT INTO Account VALUES (1002, 'Akurdi', 85000);
+INSERT INTO Account VALUES (1003, 'Chinchwad', 45000);
+INSERT INTO Account VALUES (1004, 'Chinchwad', 75000);
+INSERT INTO Account VALUES (1005, 'Nigdi', 55000);
+INSERT INTO Account VALUES (1006, 'Pimpri', 95000);
+INSERT INTO Account VALUES (1007, 'Mumbai Central', 120000);
+INSERT INTO Account VALUES (1008, 'Chinchwad', 60000);
+INSERT INTO Account VALUES (1009, 'Akurdi', 40000);
+INSERT INTO Account VALUES (1010, 'Pimpri', 80000);
+
+Insert Depositor records:
+
+INSERT INTO Depositor VALUES ('Aarav', 1001);
+INSERT INTO Depositor VALUES ('Diya', 1002);
+INSERT INTO Depositor VALUES ('Ishaan', 1007);
+INSERT INTO Depositor VALUES ('Meera', 1003);
+INSERT INTO Depositor VALUES ('Rohan', 1006);
+INSERT INTO Depositor VALUES ('Sana', 1007);
+INSERT INTO Depositor VALUES ('Kabir', 1004);
+INSERT INTO Depositor VALUES ('Anaya', 1005);
+INSERT INTO Depositor VALUES ('Vivaan', 1008);
+INSERT INTO Depositor VALUES ('Kiara', 1009);
+
+Insert Loan records:
+
+INSERT INTO Loan VALUES (2001, 'Akurdi', 600000);
+INSERT INTO Loan VALUES (2002, 'Akurdi', 450000);
+INSERT INTO Loan VALUES (2003, 'Chinchwad', 700000);
+INSERT INTO Loan VALUES (2004, 'Chinchwad', 800000);
+INSERT INTO Loan VALUES (2005, 'Nigdi', 300000);
+INSERT INTO Loan VALUES (2006, 'Pimpri', 900000);
+INSERT INTO Loan VALUES (2007, 'Mumbai Central', 1200000);
+INSERT INTO Loan VALUES (2008, 'Akurdi', 550000);
+INSERT INTO Loan VALUES (2009, 'Pimpri', 650000);
+INSERT INTO Loan VALUES (2010, 'Chinchwad', 500000);
+
+Insert Borrower records:
+
+INSERT INTO Borrower VALUES ('Aarav', 2001);
+INSERT INTO Borrower VALUES ('Diya', 2002);
+INSERT INTO Borrower VALUES ('Ishaan', 2007);
+INSERT INTO Borrower VALUES ('Meera', 2003);
+INSERT INTO Borrower VALUES ('Rohan', 2006);
+INSERT INTO Borrower VALUES ('Sana', 2007);
+INSERT INTO Borrower VALUES ('Kabir', 2004);
+INSERT INTO Borrower VALUES ('Anaya', 2005);
+INSERT INTO Borrower VALUES ('Vivaan', 2009);
+INSERT INTO Borrower VALUES ('Kiara', 2008);
+
+Save all inserted records:
+
+COMMIT;
+
+Display all table records:
+
+SELECT * FROM Branch;
+SELECT * FROM Customer;
+SELECT * FROM Account;
+SELECT * FROM Depositor;
+SELECT * FROM Loan;
+SELECT * FROM Borrower;
+
+============================================================
+4. SQL QUERIES
+============================================================
+
+QUERY 2:
+Add customer phone number in Customer table.
+
+ALTER TABLE Customer
+ADD phone VARCHAR2(15);
+
+To check the changed structure:
+
+DESC Customer;
+
+Optional: update phone numbers for sample customers:
+
+UPDATE Customer SET phone = '9876543210'
+WHERE cust_name = 'Aarav';
+
+UPDATE Customer SET phone = '9876543211'
+WHERE cust_name = 'Diya';
+
+UPDATE Customer SET phone = '9876543212'
+WHERE cust_name = 'Ishaan';
+
+COMMIT;
+
+Display customer records:
+
+SELECT * FROM Customer;
+
+------------------------------------------------------------
+QUERY 3:
+Delete phone number attribute from Customer table.
+
+ALTER TABLE Customer
+DROP COLUMN phone;
+
+Check the structure:
+
+DESC Customer;
+
+NOTE:
+Run Query 2 before Query 3. Query 3 permanently removes the phone
+column from the table structure. If you need to demonstrate both
+queries, execute Query 2, optionally update phone values, and then
+execute Query 3.
+
+------------------------------------------------------------
+QUERY 4:
+Find the names of all branches in Loan relation.
+
+SELECT DISTINCT branch_name
+FROM Loan;
+
+Explanation:
+DISTINCT removes duplicate branch names.
+
+------------------------------------------------------------
+QUERY 5:
+Find all customers who have a loan from bank.
+Display their names, loan number and loan amount.
+
+SELECT b.cust_name, l.loan_no, l.amount
+FROM Borrower b
+JOIN Loan l
+ON b.loan_no = l.loan_no;
+
+Explanation:
+Borrower connects customers with loans. Loan contains the loan
+amount, so both tables are joined using loan_no.
+
+------------------------------------------------------------
+QUERY 6:
+List all customers in alphabetical order who have a loan from
+Akurdi branch.
+
+SELECT DISTINCT b.cust_name
+FROM Borrower b
+JOIN Loan l
+ON b.loan_no = l.loan_no
+WHERE l.branch_name = 'Akurdi'
+ORDER BY b.cust_name ASC;
+
+Explanation:
+WHERE filters loans from Akurdi branch.
+ORDER BY sorts customer names alphabetically.
+
+------------------------------------------------------------
+QUERY 7:
+Find average account balance at Chinchwad branch.
+
+SELECT AVG(balance) AS average_balance
+FROM Account
+WHERE branch_name = 'Chinchwad';
+
+Explanation:
+AVG() calculates the average of account balances.
+WHERE selects only accounts belonging to Chinchwad branch.
+
+------------------------------------------------------------
+QUERY 8:
+Find number of depositors at each branch.
+
+SELECT a.branch_name,
+       COUNT(DISTINCT d.cust_name) AS number_of_depositors
+FROM Account a
+JOIN Depositor d
+ON a.acc_no = d.acc_no
+GROUP BY a.branch_name
+ORDER BY a.branch_name;
+
+Explanation:
+- Account connects each account number with a branch.
+- Depositor connects customers with account numbers.
+- JOIN combines the records.
+- GROUP BY groups records branch-wise.
+- COUNT(DISTINCT d.cust_name) counts unique depositors at each
+  branch, even if a customer has more than one account in that branch.
+
+To include branches having zero depositors, use:
+
+SELECT br.branch_name,
+       COUNT(DISTINCT d.cust_name) AS number_of_depositors
+FROM Branch br
+LEFT JOIN Account a
+ON br.branch_name = a.branch_name
+LEFT JOIN Depositor d
+ON a.acc_no = d.acc_no
+GROUP BY br.branch_name
+ORDER BY br.branch_name;
+
+------------------------------------------------------------
+QUERY 9:
+Find total loan amount for each branch.
+
+SELECT branch_name,
+       SUM(amount) AS total_loan_amount
+FROM Loan
+GROUP BY branch_name
+ORDER BY branch_name;
+
+Explanation:
+SUM() adds all loan amounts.
+GROUP BY calculates the total separately for each branch.
+
+------------------------------------------------------------
+QUERY 10:
+Find branches where the average loan amount is greater than
+5,00,000.
+
+SELECT branch_name,
+       AVG(amount) AS average_loan_amount
+FROM Loan
+GROUP BY branch_name
+HAVING AVG(amount) > 500000
+ORDER BY branch_name;
+
+Explanation:
+- GROUP BY groups loans branch-wise.
+- AVG() calculates the average loan amount for each branch.
+- HAVING filters groups after aggregation.
+- 500000 means five lakh.
+
+============================================================
+5. USEFUL SQL*PLUS COMMANDS
+============================================================
+
+Show current connected user:
+
+SHOW USER;
+
+Display all tables:
+
+SELECT table_name FROM user_tables;
+
+Display table structure:
+
+DESC Customer;
+DESC Branch;
+DESC Account;
+DESC Depositor;
+DESC Loan;
+DESC Borrower;
+
+Display all records:
+
+SELECT * FROM Customer;
+SELECT * FROM Branch;
+SELECT * FROM Account;
+SELECT * FROM Depositor;
+SELECT * FROM Loan;
+SELECT * FROM Borrower;
+
+Save changes:
+
+COMMIT;
+
+Undo uncommitted changes:
+
+ROLLBACK;
+
+Exit SQL*Plus:
+
+EXIT;
+
+============================================================
+6. IMPORTANT CONSTRAINTS
+============================================================
+
+PRIMARY KEY:
+Uniquely identifies each row. It does not allow duplicate or NULL
+values.
+
+FOREIGN KEY:
+Connects two tables and maintains referential integrity.
+
+NOT NULL:
+Does not allow a column to contain NULL values.
+
+UNIQUE:
+Does not allow duplicate values in a column or combination of columns.
+
+CHECK:
+Ensures that values satisfy a specified condition.
+
+DEFAULT:
+Provides a value automatically when no value is supplied.
+
+COMPOSITE PRIMARY KEY:
+A primary key made using more than one column. In this program,
+Depositor uses (cust_name, acc_no), and Borrower uses
+(cust_name, loan_no).
+
+============================================================
+7. IMPORTANT SQL FUNCTIONS AND CLAUSES
+============================================================
+
+DISTINCT:
+Removes duplicate rows from the result.
+
+JOIN:
+Combines related rows from two or more tables.
+
+AVG():
+Calculates average value.
+
+COUNT():
+Counts rows or non-NULL values, depending on the expression.
+
+SUM():
+Calculates the total of numeric values.
+
+GROUP BY:
+Groups rows having the same value.
+
+ORDER BY:
+Sorts the output.
+
+ASC:
+Sorts in ascending order.
+
+HAVING:
+Filters groups after GROUP BY.
+
+WHERE:
+Filters individual rows before grouping.
+
+ALTER TABLE:
+Changes the structure of an existing table.
+
+ADD:
+Adds a new column to a table.
+
+DROP COLUMN:
+Removes a column from a table.
+
+============================================================
+8. IMPORTANT VIVA QUESTIONS WITH EASY ANSWERS
+============================================================
+
+1. What is a primary key?
+   A primary key uniquely identifies every record in a table.
+
+2. What is a foreign key?
+   A foreign key refers to a primary key or unique key in another
+   table and creates a relationship between tables.
+
+3. Why is Branch created first?
+   Because Account and Loan refer to Branch through foreign keys.
+
+4. Why do we use a composite primary key in Depositor?
+   To prevent the same customer-account combination from being
+   inserted more than once.
+
+5. What is the difference between WHERE and HAVING?
+   WHERE filters rows before grouping. HAVING filters groups after
+   GROUP BY.
+
+6. What is the use of DISTINCT?
+   It removes duplicate values or rows from the result.
+
+7. What is the use of AVG()?
+   It calculates the average of numeric values.
+
+8. What is the use of SUM()?
+   It calculates the total of numeric values.
+
+9. What is the use of COUNT()?
+   It counts rows or non-NULL values.
+
+10. What is GROUP BY?
+    It groups rows with the same values so aggregate functions can
+    be applied separately to each group.
+
+11. What is ORDER BY?
+    It sorts the query result in ascending or descending order.
+
+12. What is the difference between DELETE and DROP?
+    DELETE removes rows from a table. DROP removes a database object
+    such as a table.
+
+13. What is ALTER TABLE?
+    It changes the structure of an existing table.
+
+14. How do you add a column?
+    ALTER TABLE table_name ADD column_name datatype;
+
+15. How do you delete a column?
+    ALTER TABLE table_name DROP COLUMN column_name;
+
+16. Why do we use JOIN in Query 5?
+    Borrower stores customer-loan relationships, while Loan stores
+    loan details and amounts. JOIN combines these details.
+
+17. Why do we use GROUP BY in Query 9?
+    To calculate the total loan amount separately for each branch.
+
+18. Why do we use HAVING in Query 10?
+    Because the condition is applied to the average calculated for
+    each branch, which is an aggregate result.
+
+19. What is referential integrity?
+    It ensures that a foreign-key value refers to an existing
+    matching record in the parent table, unless NULL is permitted.
+
+20. What is the difference between CHAR and VARCHAR2?
+    CHAR has fixed length. VARCHAR2 stores variable-length text.
+
+============================================================
+9. COMPLETE EXECUTION ORDER FOR PRACTICAL EXAM
+============================================================
+
+1. Open terminal.
+2. Connect to Oracle:
+
+   sqlplus username/password
+
+3. Create Branch table.
+4. Create Customer table.
+5. Create Account table.
+6. Create Depositor table.
+7. Create Loan table.
+8. Create Borrower table.
+9. Insert records into Branch.
+10. Insert records into Customer.
+11. Insert records into Account.
+12. Insert records into Depositor.
+13. Insert records into Loan.
+14. Insert records into Borrower.
+15. Execute COMMIT.
+16. Display records using SELECT *.
+17. Execute Query 2 to add phone column.
+18. Execute Query 3 to drop phone column.
+19. Execute Queries 4 to 10 in sequence.
+20. Verify outputs and exit SQL*Plus.
+
+IMPORTANT:
+The phone column is added in Query 2 and removed in Query 3.
+If you need to show that it exists, run DESC Customer after Query 2
+and before Query 3.
+
+END OF PRACTICAL FILE

@@ -1,0 +1,357 @@
+PROBLEM STATEMENT 12 – MONGODB EMPLOYEE COLLECTION Ubuntu Practical –
+Commands, Code and Queries in Execution Order
+
+AIM Create a database named ICEM and an employee collection in MongoDB.
+Insert suitable data and perform the given queries.
+
+IMPORTANT These are MongoDB shell commands (mongosh), NOT SQL queries.
+Run the Ubuntu commands in the normal terminal. Run the JavaScript-style
+MongoDB commands after the mongosh prompt appears.
+
+============================================================ PART 1:
+START MONGODB AND OPEN MONGOSH
+============================================================
+
+1.  Open Ubuntu Terminal.
+
+2.  Start MongoDB service:
+
+sudo systemctl start mongod
+
+3.  Check MongoDB service status:
+
+sudo systemctl status mongod
+
+Press q to exit the status screen.
+
+4.  Open MongoDB shell:
+
+mongosh
+
+You should now see a prompt similar to: test>
+
+If mongosh is not installed or the mongod service is unavailable,
+resolve the MongoDB installation/service issue before continuing.
+
+============================================================ PART 2:
+CREATE / SELECT DATABASE
+============================================================
+
+At the mongosh prompt, type:
+
+use ICEM
+
+This switches to the ICEM database. MongoDB creates/persists the
+database when data is first stored in it.
+
+============================================================ PART 3:
+CREATE EMPLOYEE COLLECTION AND INSERT DATA
+============================================================
+
+The following insertMany command creates the employee collection
+automatically if it does not already exist.
+
+db.employee.insertMany([ {empid: 1, ename: “Amit”, dept: “Computer”,
+salary: 45000}, {empid: 2, ename: “Priya”, dept: “IT”, salary: 35000},
+{empid: 3, ename: “Rahul”, dept: “Computer”, salary: 50000}, {empid: 4,
+ename: “Sneha”, dept: “HR”, salary: 25000}, {empid: 5, ename: “Rohit”,
+dept: “IT”, salary: 40000}, {empid: 6, ename: “Neha”, dept: “Computer”,
+salary: 30000}, {empid: 7, ename: “Pooja”, dept: “HR”, salary: 20000},
+{empid: 8, ename: “Karan”, dept: “IT”, salary: 55000}])
+
+Expected result includes: acknowledged: true insertedIds: …
+
+NOTE: If you execute the insertMany command again, it will insert
+duplicate employee records with new MongoDB _id values. For a fresh
+practical run, use a fresh database/collection or clear the old
+collection first if appropriate.
+
+Optional: To remove existing employee documents before inserting the
+sample data again:
+
+db.employee.deleteMany({})
+
+============================================================ PART 4:
+PERFORM THE 10 GIVEN QUERIES
+============================================================
+
+Q1. Display information of all employees.
+
+db.employee.find()
+
+Q2. Display information of employees working in the Computer department.
+
+db.employee.find({dept: “Computer”})
+
+Q3. Display information of employees working in the Computer OR IT
+department using a logical operator.
+
+db.employee.find({ $or: [ {dept: “Computer”}, {dept: “IT”} ] })
+
+Q4. Display information of employees whose salary is greater than Rs.
+30,000.
+
+db.employee.find({salary: {$gt: 30000}})
+
+Q5. Display information of employees whose salary is greater than or
+equal to Rs. 40,000 AND who work in the Computer department.
+
+db.employee.find({ salary: {$gte: 40000}, dept: “Computer” })
+
+MongoDB treats multiple field conditions in the same query document as
+AND.
+
+Q6. Create an index on the ename field and then drop that index.
+
+Create index:
+
+db.employee.createIndex({ename: 1})
+
+Drop the index:
+
+db.employee.dropIndex({ename: 1})
+
+In createIndex: 1 means ascending order. -1 means descending order.
+
+Q7. Display information of employees whose salary is between Rs. 20,000
+and Rs. 40,000 (including both limits).
+
+db.employee.find({ salary: {$gte: 20000, $lte: 40000} })
+
+Q8. Display information of employees whose department is NOT IT.
+
+db.employee.find({dept: {$ne: “IT”}})
+
+Q9. Display the total salary paid to employees in each department.
+
+db.employee.aggregate([ { $group: {
+            _id: "$dept”, totalSalary: {$sum: "$salary”} } }])
+
+Q10. Display the average salary of employees in each department.
+
+db.employee.aggregate([ { $group: {
+            _id: "$dept”, averageSalary: {$avg: "$salary”} } }])
+
+============================================================ PART 5:
+EXPECTED AGGREGATION RESULTS
+============================================================
+
+Q9 – Total salary department-wise:
+
+Computer: 125000 IT: 130000 HR: 45000
+
+Q10 – Average salary department-wise:
+
+Computer: 41666.666666666664 (approximately Rs. 41,666.67) IT:
+43333.333333333336 (approximately Rs. 43,333.33) HR: 22500
+
+The order of department results may differ.
+
+============================================================ PART 6:
+USEFUL EXTRA MONGODB COMMANDS
+============================================================
+
+Show the currently selected database:
+
+db
+
+Show all databases:
+
+show dbs
+
+Show collections in the current database:
+
+show collections
+
+Create an empty collection (not needed if insertMany has already created
+it):
+
+db.createCollection(“employee”)
+
+Display all employees:
+
+db.employee.find()
+
+Display documents in a readable/pretty format:
+
+db.employee.find().pretty()
+
+Find only one matching employee:
+
+db.employee.findOne({empid: 1})
+
+Update the salary of employee with empid 1:
+
+db.employee.updateOne( {empid: 1}, {$set: {salary: 50000}} )
+
+Delete one employee with empid 1:
+
+db.employee.deleteOne({empid: 1})
+
+Delete all employee documents (use carefully):
+
+db.employee.deleteMany({})
+
+Drop the employee collection (use carefully):
+
+db.employee.drop()
+
+Drop the currently selected database (use carefully):
+
+db.dropDatabase()
+
+Exit mongosh:
+
+exit
+
+============================================================ PART 7:
+UBUNTU TERMINAL – STOP MONGODB (OPTIONAL)
+============================================================
+
+After exiting mongosh, to stop the MongoDB service:
+
+sudo systemctl stop mongod
+
+You do not need to stop the service after every practical.
+
+============================================================ PART 8:
+QUICK OPERATOR REVISION
+============================================================
+
+gt = Greaterthangte = Greater than or equal to lt = Lessthanlte = Less
+than or equal to ne = Notequaltoor = At least one condition must be true
+and = Allspecifiedconditionsmustbetruesum = Calculates total
+avg = Calculatesaveragemax = Finds maximum min = Findsminimumgroup =
+Groups documents $set = Sets/updates a field value
+
+============================================================ PART 9:
+IMPORTANT VIVA QUESTIONS – QUICK ANSWERS
+============================================================
+
+1.  What is MongoDB? MongoDB is a NoSQL, document-oriented database.
+
+2.  What is NoSQL? NoSQL means Not Only SQL. It supports non-relational
+    data models.
+
+3.  What is a collection? A collection is a group of documents. It is
+    similar to a table in SQL.
+
+4.  What is a document? A document is an individual record stored as
+    key-value pairs.
+
+5.  What is BSON? BSON stands for Binary JSON. MongoDB stores documents
+    internally in BSON format.
+
+6.  What is mongosh? mongosh is the MongoDB shell used to execute
+    MongoDB commands.
+
+7.  What is the difference between SQL and MongoDB? SQL databases
+    commonly store data in tables and rows. MongoDB stores data in
+    collections and documents.
+
+8.  What is the difference between find() and findOne()? find() returns
+    all matching documents. findOne() returns the first matching
+    document.
+
+9.  What is insertOne()? It inserts one document into a collection.
+
+10. What is insertMany()? It inserts multiple documents into a
+    collection.
+
+11. What is CRUD? CRUD stands for Create, Read, Update and Delete.
+
+12. What is $gt? It means greater than.
+
+13. What is $gte? It means greater than or equal to.
+
+14. What is $ne? It means not equal to.
+
+15. What is $or? It is a logical operator that matches documents when at
+    least one condition is true.
+
+16. What is $and? It is a logical operator that matches documents when
+    all specified conditions are true.
+
+17. Why is $and not written explicitly in Q5? MongoDB applies AND
+    automatically when multiple conditions are placed in the same query
+    document.
+
+18. What is an index? An index is a data structure that helps MongoDB
+    find documents more efficiently.
+
+19. Why create an index on ename? It can improve searches that use the
+    ename field.
+
+20. What does 1 mean in createIndex({ename: 1})? It specifies ascending
+    index order.
+
+21. What does -1 mean in an index? It specifies descending index order.
+
+22. What is the default index in MongoDB? MongoDB automatically creates
+    a unique index on the _id field in each collection.
+
+23. What is aggregation? Aggregation processes documents and performs
+    calculations or transformations.
+
+24. What is $group? It is an aggregation stage that groups documents by
+    a specified field or expression.
+
+25. What does _id: “$dept” mean inside $group? It groups documents
+    according to the value of the dept field.
+
+26. What is $sum? It calculates the total.
+
+27. What is $avg? It calculates the average.
+
+28. Why is $ used before dept or salary in aggregation? It refers to the
+    value of that field in the current document.
+
+29. What are $max and min?max finds the maximum value and $min finds the
+    minimum value.
+
+30. How do you check the current database? Use the db command.
+
+31. How do you list databases? Use show dbs.
+
+32. How do you list collections? Use show collections.
+
+33. How do you delete one document? Use deleteOne().
+
+34. How do you update a document? Use updateOne() with the
+    $set operator, for example:
+    db.employee.updateOne({empid: 1}, {$set: {salary: 50000}})
+
+35. Is MongoDB schema-free? MongoDB has a flexible schema. Documents in
+    one collection can have different fields, although schema validation
+    is supported.
+
+============================================================ PART 10:
+EASY MEMORY TIPS
+============================================================
+
+Remember these patterns instead of memorizing every query separately:
+
+1.  Display records: db.employee.find()
+
+2.  Search by a field: db.employee.find({field: “value”})
+
+3.  Greater than: db.employee.find({salary: {$gt: 30000}})
+
+4.  Greater than or equal: db.employee.find({salary: {$gte: 40000}})
+
+5.  OR condition: db.employee.find({$or: [condition1, condition2]})
+
+6.  Not equal: db.employee.find({dept: {$ne: “IT”}})
+
+7.  Total department-wise: Use $group and $sum.
+
+8.  Average department-wise: Use $group and $avg.
+
+9.  Create index: db.employee.createIndex({ename: 1})
+
+10. Drop index: db.employee.dropIndex({ename: 1})
+
+MOST IMPORTANT: Q1 to Q8 mainly use find(). Q9 and Q10 use aggregate()
+with $group. For Q9 use $sum (total). For Q10 use $avg (average).
+
+END OF PRACTICAL NOTES

@@ -1,0 +1,330 @@
+BANK DATABASE PRACTICAL - MYSQL ON UBUNTU
+==========================================
+
+This file contains the complete commands and SQL queries in execution order.
+
+IMPORTANT NOTES
+---------------
+1. This is written for MySQL on Ubuntu.
+2. The script uses ON DELETE CASCADE so Query 9 can delete Pune customers
+   even when they have related Account or Loan records.
+3. If your examiner does not require ON DELETE CASCADE, you may remove
+   "ON DELETE CASCADE" from the foreign key definitions. In that case,
+   delete dependent Account and Loan records before deleting Pune customers.
+4. The first command drops and recreates BankDB. Running the script again
+   resets the database and all its data.
+5. Run Query 9 LAST because it deletes customer records.
+
+------------------------------------------------------------
+PART 1 - OPEN MYSQL / CREATE THE SQL FILE
+------------------------------------------------------------
+
+Option A: Open MySQL directly:
+
+    sudo mysql
+
+Option B: Create a file containing the full program:
+
+    nano bank.sql
+
+Paste PARTS 2, 3 and 4 into bank.sql, save with:
+    CTRL + O
+    Enter
+    CTRL + X
+
+Run the complete file:
+
+    sudo mysql < bank.sql
+
+------------------------------------------------------------
+PART 2 - CREATE DATABASE AND FOUR TABLES
+------------------------------------------------------------
+
+DROP DATABASE IF EXISTS BankDB;
+CREATE DATABASE BankDB;
+USE BankDB;
+
+-- 1. Customer table
+CREATE TABLE Customer (
+    cust_id INT PRIMARY KEY,
+    cust_name VARCHAR(50),
+    city VARCHAR(30),
+    phone VARCHAR(15)
+);
+
+-- 2. Branch table
+CREATE TABLE Branch (
+    branch_id INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    branch_city VARCHAR(30)
+);
+
+-- 3. Account table
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    cust_id INT,
+    branch_id INT,
+    balance DECIMAL(10,2),
+    FOREIGN KEY (cust_id) REFERENCES Customer(cust_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+        ON DELETE CASCADE
+);
+
+-- 4. Loan table
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    cust_id INT,
+    branch_id INT,
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cust_id) REFERENCES Customer(cust_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+        ON DELETE CASCADE
+);
+
+------------------------------------------------------------
+PART 3 - INSERT 10 RECORDS INTO EACH TABLE
+------------------------------------------------------------
+
+-- A. Insert 10 customers
+INSERT INTO Customer VALUES
+(1, 'Priya Sharma', 'Pune', '9876543210'),
+(2, 'Rahul Patil', 'Mumbai', '9876543211'),
+(3, 'Pooja More', 'Pune', NULL),
+(4, 'Amit Shah', 'Delhi', '9876543213'),
+(5, 'Sneha Joshi', 'Mumbai', '9876543214'),
+(6, 'Pratik Desai', 'Nashik', NULL),
+(7, 'Neha Kulkarni', 'Pune', '9876543216'),
+(8, 'Rohan Mehta', 'Mumbai', NULL),
+(9, 'Payal Singh', 'Delhi', '9876543218'),
+(10, 'Karan Verma', 'Nashik', '9876543219');
+
+-- B. Insert 10 branches
+INSERT INTO Branch VALUES
+(101, 'Main Branch', 'Pune'),
+(102, 'City Branch', 'Mumbai'),
+(103, 'Central Branch', 'Delhi'),
+(104, 'Market Branch', 'Nashik'),
+(105, 'East Branch', 'Pune'),
+(106, 'West Branch', 'Mumbai'),
+(107, 'North Branch', 'Delhi'),
+(108, 'South Branch', 'Nashik'),
+(109, 'Airport Branch', 'Pune'),
+(110, 'Station Branch', 'Mumbai');
+
+-- C. Insert 10 accounts
+INSERT INTO Account VALUES
+(1001, 1, 101, 50000),
+(1002, 2, 102, 60000),
+(1003, 3, 101, 30000),
+(1004, 4, 103, 45000),
+(1005, 5, 102, 70000),
+(1006, 6, 104, 25000),
+(1007, 7, 105, 80000),
+(1008, 8, 106, 35000),
+(1009, 9, 103, 55000),
+(1010, 10, 104, 40000);
+
+-- D. Insert 10 loans
+INSERT INTO Loan VALUES
+(2001, 1, 101, 100000),
+(2002, 2, 102, 150000),
+(2003, 3, 101, 80000),
+(2004, 4, 103, 200000),
+(2005, 5, 102, 120000),
+(2006, 6, 104, 90000),
+(2007, 7, 105, 175000),
+(2008, 8, 106, 110000),
+(2009, 9, 103, 130000),
+(2010, 10, 104, 95000);
+
+------------------------------------------------------------
+PART 4 - THE 10 REQUIRED SQL QUERIES
+------------------------------------------------------------
+
+-- Q1. Display all customers in alphabetical order of their names.
+SELECT *
+FROM Customer
+ORDER BY cust_name ASC;
+
+-- Q2. Display names and cities of customers whose names start with P.
+SELECT cust_name, city
+FROM Customer
+WHERE cust_name LIKE 'P%';
+
+-- Q3. Display customers who live in Pune or Mumbai and whose phone
+-- number is not NULL.
+SELECT *
+FROM Customer
+WHERE city IN ('Pune', 'Mumbai')
+AND phone IS NOT NULL;
+
+-- To check only one city, for example Pune:
+-- SELECT * FROM Customer WHERE city = 'Pune';
+
+-- To check only phone condition (phone is available):
+-- SELECT * FROM Customer WHERE phone IS NOT NULL;
+
+-- Q4. Display customers whose phone number is NULL.
+SELECT *
+FROM Customer
+WHERE phone IS NULL;
+
+-- Q5. Display average account balance for each branch.
+SELECT branch_id, AVG(balance)
+FROM Account
+GROUP BY branch_id;
+
+-- Q6. Display branch-wise average balance only where average is
+-- greater than 40000.
+SELECT branch_id, AVG(balance)
+FROM Account
+GROUP BY branch_id
+HAVING AVG(balance) > 40000;
+
+-- Alternative Q5/Q6: Display branch names using JOIN.
+SELECT b.branch_name, AVG(a.balance)
+FROM Account a
+JOIN Branch b
+ON a.branch_id = b.branch_id
+GROUP BY b.branch_id, b.branch_name;
+
+SELECT b.branch_name, AVG(a.balance)
+FROM Account a
+JOIN Branch b
+ON a.branch_id = b.branch_id
+GROUP BY b.branch_id, b.branch_name
+HAVING AVG(a.balance) > 40000;
+
+-- Q7. Display account number, original balance and balance after
+-- adding 10 percent interest. This does NOT update stored balance.
+SELECT acc_no,
+       balance,
+       balance * 1.10 AS balance_with_interest
+FROM Account;
+
+-- Q8. Update the phone number of a specific customer by name.
+UPDATE Customer
+SET phone = '9999999999'
+WHERE cust_name = 'Priya Sharma';
+
+-- Verify Q8 update:
+SELECT *
+FROM Customer
+WHERE cust_name = 'Priya Sharma';
+
+-- Q9. Delete customers who live in Pune.
+-- Run this query LAST because it deletes data.
+-- With ON DELETE CASCADE, related Account and Loan records are
+-- automatically deleted.
+DELETE FROM Customer
+WHERE city = 'Pune';
+
+-- Verify Q9 deletion:
+SELECT *
+FROM Customer;
+
+-- Q10. Display customers who either have an account or a loan,
+-- using UNION. Run this BEFORE Q9 if you want the original 10 customers.
+SELECT c.cust_id, c.cust_name
+FROM Customer c
+INNER JOIN Account a
+ON c.cust_id = a.cust_id
+
+UNION
+
+SELECT c.cust_id, c.cust_name
+FROM Customer c
+INNER JOIN Loan l
+ON c.cust_id = l.cust_id;
+
+------------------------------------------------------------
+PART 5 - USEFUL CHECK COMMANDS
+------------------------------------------------------------
+
+-- Select the database:
+USE BankDB;
+
+-- Show all tables:
+SHOW TABLES;
+
+-- See table structure:
+DESC Customer;
+DESC Branch;
+DESC Account;
+DESC Loan;
+
+-- Display all table records:
+SELECT * FROM Customer;
+SELECT * FROM Branch;
+SELECT * FROM Account;
+SELECT * FROM Loan;
+
+-- Exit MySQL:
+EXIT;
+
+------------------------------------------------------------
+PART 6 - IMPORTANT UBUNTU / MYSQL COMMANDS
+------------------------------------------------------------
+
+Open MySQL:
+    sudo mysql
+
+Create/edit SQL file:
+    nano bank.sql
+
+Run SQL file:
+    sudo mysql < bank.sql
+
+If MySQL service is stopped, start it:
+    sudo systemctl start mysql
+
+Check MySQL service:
+    sudo systemctl status mysql
+
+------------------------------------------------------------
+PART 7 - QUICK SQL MEMORY TIPS
+------------------------------------------------------------
+
+SELECT       = Display data
+INSERT       = Add records
+UPDATE       = Change existing records
+DELETE       = Delete records
+CREATE       = Create database/table
+ALTER        = Modify table structure
+DROP         = Remove database/table
+ORDER BY     = Sort records
+ASC          = Ascending order
+DESC         = Descending order
+WHERE        = Filter individual rows
+LIKE 'P%'    = Names starting with P
+IN           = Match one value from a list
+IS NULL      = Check missing values
+IS NOT NULL  = Check non-NULL values
+AVG()        = Calculate average
+SUM()        = Calculate total
+COUNT()      = Count records/values
+GROUP BY     = Group similar values
+HAVING       = Filter groups
+JOIN         = Combine related table columns/rows
+UNION        = Combine SELECT results and remove duplicates
+PRIMARY KEY  = Uniquely identifies each row
+FOREIGN KEY  = Links related tables
+COMMIT       = Save transaction changes
+ROLLBACK     = Undo uncommitted transaction changes
+
+IMPORTANT DIFFERENCES:
+1. WHERE filters rows; HAVING filters groups.
+2. DELETE removes rows; DROP removes the table itself.
+3. UPDATE changes existing rows; INSERT adds new rows.
+4. SELECT displays results automatically.
+5. UPDATE, INSERT and DELETE show a status message. Use SELECT
+   afterwards when you want to view or verify the data.
+6. Use IS NULL, not = NULL.
+7. Use = for one city; use IN for multiple cities.
+8. Use 1.10 to calculate original balance plus 10 percent interest.
+9. Use table aliases such as c for Customer and a for Account.
+10. Run the Pune DELETE query last.
+
+END OF PRACTICAL FILE

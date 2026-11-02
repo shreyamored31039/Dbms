@@ -1,0 +1,424 @@
+PROBLEM STATEMENT 2 - STUDENTS AND ENROLMENTS
+SQL*Plus / Oracle SQL - Complete Practical File
+
+============================================================
+1. START ORACLE SQL*PLUS
+============================================================
+
+Open a terminal and connect to Oracle:
+
+sqlplus username/password
+
+Example (if your local Oracle setup uses this account):
+sqlplus system/your_password
+
+After the SQL> prompt appears, run the SQL commands below.
+To see PL/SQL output (not required for these queries), use:
+SET SERVEROUTPUT ON;
+
+To see the tables:
+SELECT table_name FROM user_tables;
+
+============================================================
+2. CREATE TABLES WITH PRIMARY KEYS AND FOREIGN KEYS
+============================================================
+
+First create the Students table:
+
+CREATE TABLE Students (
+    student_id NUMBER(5),
+    name       VARCHAR2(30) NOT NULL,
+    city       VARCHAR2(30),
+    CONSTRAINT pk_students PRIMARY KEY (student_id)
+);
+
+Create Enrolments. The unique index is created before adding the
+primary-key constraint so that the same index can be used by the PK.
+
+CREATE TABLE Enrolments (
+    enroll_id  NUMBER(5) NOT NULL,
+    student_id NUMBER(5),
+    course     VARCHAR2(30) NOT NULL,
+    marks      NUMBER(5,2),
+    CONSTRAINT fk_enrol_student
+        FOREIGN KEY (student_id) REFERENCES Students(student_id)
+);
+
+Create the unique index and use it for the Enrolments primary key:
+
+CREATE UNIQUE INDEX idx_enroll_id_unique
+ON Enrolments(enroll_id);
+
+ALTER TABLE Enrolments
+ADD CONSTRAINT pk_enrolments PRIMARY KEY (enroll_id)
+USING INDEX idx_enroll_id_unique;
+
+NOTE:
+- student_id is the primary key of Students.
+- enroll_id is the primary key of Enrolments.
+- Enrolments.student_id is a foreign key referencing Students.student_id.
+- The unique index above also supports the primary key on enroll_id.
+  Do not create another unique index on the same column list.
+
+Check the table structure:
+
+DESC Students;
+DESC Enrolments;
+
+============================================================
+3. INSERT 10 RECORDS INTO STUDENTS
+============================================================
+
+INSERT INTO Students VALUES (1, 'Aarav', 'Pune');
+INSERT INTO Students VALUES (2, 'Diya', 'Mumbai');
+INSERT INTO Students VALUES (3, 'Ishaan', 'Nashik');
+INSERT INTO Students VALUES (4, 'Meera', 'Pune');
+INSERT INTO Students VALUES (5, 'Rohan', 'Thane');
+INSERT INTO Students VALUES (6, 'Sana', 'Mumbai');
+INSERT INTO Students VALUES (7, 'Kabir', 'Nagpur');
+INSERT INTO Students VALUES (8, 'Anaya', 'Pune');
+INSERT INTO Students VALUES (9, 'Vivaan', 'Kolhapur');
+INSERT INTO Students VALUES (10, 'Kiara', 'Satara');
+
+============================================================
+4. INSERT 10 RECORDS INTO ENROLMENTS
+============================================================
+
+INSERT INTO Enrolments VALUES (101, 1, 'DBMS', 85);
+INSERT INTO Enrolments VALUES (102, 1, 'OS', 78);
+INSERT INTO Enrolments VALUES (103, 2, 'DBMS', 92);
+INSERT INTO Enrolments VALUES (104, 3, 'CN', 74);
+INSERT INTO Enrolments VALUES (105, 4, 'DBMS', 88);
+INSERT INTO Enrolments VALUES (106, 5, 'Python', 69);
+INSERT INTO Enrolments VALUES (107, 6, 'OS', 81);
+INSERT INTO Enrolments VALUES (108, 7, 'CN', 95);
+INSERT INTO Enrolments VALUES (109, 8, 'Python', 76);
+INSERT INTO Enrolments VALUES (110, 9, 'DBMS', 90);
+
+Save the changes:
+
+COMMIT;
+
+Display all records:
+
+SELECT * FROM Students;
+SELECT * FROM Enrolments;
+
+============================================================
+5. SQL QUERIES
+============================================================
+
+QUERY 1:
+Display student names along with their course names and marks.
+
+SELECT s.name, e.course, e.marks
+FROM Students s
+INNER JOIN Enrolments e
+ON s.student_id = e.student_id;
+
+Explanation:
+INNER JOIN displays only students who have a matching enrolment.
+
+------------------------------------------------------------
+QUERY 2:
+Display all students along with their course names and marks,
+including students who are not enrolled in any course.
+
+SELECT s.student_id, s.name, e.course, e.marks
+FROM Students s
+LEFT JOIN Enrolments e
+ON s.student_id = e.student_id;
+
+Explanation:
+LEFT JOIN displays every student. If a student has no enrolment,
+course and marks are displayed as NULL.
+
+------------------------------------------------------------
+QUERY 3:
+Display all enrolments along with the corresponding student names.
+
+SELECT e.enroll_id, e.student_id, s.name, e.course, e.marks
+FROM Enrolments e
+INNER JOIN Students s
+ON e.student_id = s.student_id;
+
+Explanation:
+This joins each enrolment with the matching student record.
+
+------------------------------------------------------------
+QUERY 4:
+Display all possible combinations of students and courses.
+
+SELECT s.name, e.course
+FROM Students s
+CROSS JOIN Enrolments e;
+
+Explanation:
+CROSS JOIN produces every possible combination of rows.
+With 10 students and 10 enrolment rows, it produces 100 rows.
+Repeated course names can appear because different students may
+be enrolled in the same course.
+
+------------------------------------------------------------
+QUERY 5:
+Display students whose marks are greater than the average marks
+of all enrolments.
+
+SELECT s.student_id, s.name, e.course, e.marks
+FROM Students s
+JOIN Enrolments e
+ON s.student_id = e.student_id
+WHERE e.marks > (
+    SELECT AVG(marks)
+    FROM Enrolments
+);
+
+Explanation:
+The subquery calculates the average marks. The outer query displays
+enrolment records whose marks are greater than that average.
+
+------------------------------------------------------------
+QUERY 6:
+Display students who have obtained marks greater than 80.
+
+SELECT s.student_id, s.name, e.course, e.marks
+FROM Students s
+JOIN Enrolments e
+ON s.student_id = e.student_id
+WHERE e.marks > 80;
+
+------------------------------------------------------------
+QUERY 7:
+Display students who are enrolled in the DBMS course.
+
+SELECT s.student_id, s.name, e.course, e.marks
+FROM Students s
+JOIN Enrolments e
+ON s.student_id = e.student_id
+WHERE e.course = 'DBMS';
+
+------------------------------------------------------------
+QUERY 8:
+Display the student ID(s) who have obtained the highest marks.
+
+SELECT DISTINCT student_id
+FROM Enrolments
+WHERE marks = (
+    SELECT MAX(marks)
+    FROM Enrolments
+);
+
+Explanation:
+MAX(marks) finds the highest marks. The outer query returns the
+student ID of every student who obtained those marks. DISTINCT
+prevents duplicate student IDs if necessary.
+
+To display the student's name as well:
+
+SELECT DISTINCT s.student_id, s.name, e.marks
+FROM Students s
+JOIN Enrolments e
+ON s.student_id = e.student_id
+WHERE e.marks = (
+    SELECT MAX(marks)
+    FROM Enrolments
+);
+
+============================================================
+6. CREATE AND USE A VIEW
+============================================================
+
+QUERY 9(a):
+Create a view named student_course_view displaying student names,
+course names, and marks.
+
+CREATE OR REPLACE VIEW student_course_view AS
+SELECT s.student_id, s.name, e.enroll_id, e.course, e.marks
+FROM Students s
+JOIN Enrolments e
+ON s.student_id = e.student_id;
+
+NOTE:
+student_id and enroll_id are included to identify the student and
+the particular enrolment. The required name, course, and marks
+columns are also present.
+
+QUERY 9(b):
+Display all records from the view.
+
+SELECT * FROM student_course_view;
+
+QUERY 9(c):
+Update the marks of a student through the view.
+
+Example: Change the marks of enrolment 101 to 95.
+
+UPDATE student_course_view
+SET marks = 95
+WHERE enroll_id = 101;
+
+COMMIT;
+
+Check the updated record:
+
+SELECT * FROM student_course_view
+WHERE enroll_id = 101;
+
+You can also verify the base table:
+
+SELECT * FROM Enrolments
+WHERE enroll_id = 101;
+
+NOTE ABOUT UPDATING THE VIEW:
+This is a join view. In Oracle, the Enrolments table is key-preserved
+because enroll_id uniquely identifies each enrolment. Therefore,
+updating the Enrolments column marks through this view is allowed.
+The view update changes the underlying Enrolments table.
+
+============================================================
+7. CREATE INDEXES
+============================================================
+
+QUERY 10(a):
+Create a normal index on the name column of Students.
+
+CREATE INDEX idx_students_name
+ON Students(name);
+
+QUERY 10(b):
+Create a unique index on the enroll_id column of Enrolments.
+
+The unique index was already created in Section 2:
+
+CREATE UNIQUE INDEX idx_enroll_id_unique
+ON Enrolments(enroll_id);
+
+Do NOT execute the CREATE UNIQUE INDEX statement a second time.
+It was created before adding the primary-key constraint, and the
+primary-key constraint uses that index.
+
+To view indexes created on your tables:
+
+SELECT index_name, table_name, uniqueness
+FROM user_indexes
+WHERE table_name IN ('STUDENTS', 'ENROLMENTS')
+ORDER BY table_name, index_name;
+
+To view the columns in those indexes:
+
+SELECT index_name, table_name, column_name
+FROM user_ind_columns
+WHERE table_name IN ('STUDENTS', 'ENROLMENTS')
+ORDER BY table_name, index_name, column_position;
+
+============================================================
+8. USEFUL COMMANDS FOR PRACTICAL EXAM
+============================================================
+
+Show all tables:
+
+SELECT table_name FROM user_tables;
+
+Show table structure:
+
+DESC Students;
+DESC Enrolments;
+
+Display all records:
+
+SELECT * FROM Students;
+SELECT * FROM Enrolments;
+
+Display view records:
+
+SELECT * FROM student_course_view;
+
+Save changes:
+
+COMMIT;
+
+Undo uncommitted changes:
+
+ROLLBACK;
+
+Clear the SQL*Plus screen:
+
+CLEAR SCREEN
+
+Exit SQL*Plus:
+
+EXIT;
+
+============================================================
+9. IMPORTANT VIVA POINTS
+============================================================
+
+1. Primary Key:
+   A column (or group of columns) that uniquely identifies each row.
+   It cannot contain duplicate or NULL values.
+
+2. Foreign Key:
+   A column that refers to a primary key or unique key in another
+   table. It maintains referential integrity.
+
+3. INNER JOIN:
+   Returns only matching rows from both tables.
+
+4. LEFT JOIN:
+   Returns all rows from the left table and matching rows from the
+   right table. Non-matching right-side columns contain NULL.
+
+5. CROSS JOIN:
+   Returns the Cartesian product (all possible row combinations).
+
+6. Subquery:
+   A query written inside another SQL query.
+
+7. AVG():
+   An aggregate function that calculates the average of values.
+
+8. MAX():
+   An aggregate function that returns the highest value.
+
+9. View:
+   A virtual table based on the result of a SQL query.
+
+10. Index:
+    A database object that helps retrieve rows faster. It can require
+    additional storage and can add overhead to INSERT, UPDATE, DELETE.
+
+11. Unique Index:
+    An index that does not allow duplicate values in its indexed
+    column or combination of columns.
+
+12. Why is enroll_id a primary key?
+    Because each enrolment must have a unique identification number.
+
+13. Why can one student have multiple enrolments?
+    Because student_id is a foreign key in Enrolments and is not
+    declared UNIQUE. This represents a one-to-many relationship.
+
+14. What happens for a student with no enrolment in a LEFT JOIN?
+    The student is displayed, and the enrolment columns show NULL.
+
+============================================================
+10. IMPORTANT EXECUTION ORDER
+============================================================
+
+Run the commands in this order:
+
+1. Connect to Oracle using SQL*Plus.
+2. Create Students table.
+3. Create Enrolments table.
+4. Create the unique index on Enrolments(enroll_id).
+5. Add the Enrolments primary-key constraint using that index.
+6. Insert 10 records into Students.
+7. Insert 10 records into Enrolments.
+8. Execute COMMIT.
+9. Execute Queries 1 to 8.
+10. Create the view and display its records.
+11. Update marks through the view and execute COMMIT.
+12. Create the normal index on Students(name).
+13. Check the indexes using USER_INDEXES and USER_IND_COLUMNS.
+
+END OF PRACTICAL FILE

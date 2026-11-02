@@ -1,0 +1,204 @@
+DBMS PRACTICAL: STORED PROCEDURE - proc_Grade
+
+AIM
+
+Create Stud_Marks and Result tables, insert 10 records, and write a
+stored procedure named proc_Grade to categorize students based on total
+marks.
+
+ORACLE LAB SETUP (UBUNTU TERMINAL)
+
+Run these commands in the Ubuntu terminal (not at the SQL> prompt).
+
+1.  Check Docker containers: docker ps -a
+
+2.  Start the Oracle container if it is stopped: docker start
+    CONTAINER_ID
+
+    Replace CONTAINER_ID with the actual container ID or container name
+    shown by docker ps -a.
+
+3.  Connect to Oracle using the lab command: orals
+
+If your lab’s orals command already starts/connects to Oracle, follow
+your instructor’s lab procedure. When connected, you should see:
+
+SQL>
+
+IMPORTANT: - docker ps -a, docker start, and orals are Ubuntu terminal
+commands. - CREATE TABLE, INSERT, SET SERVEROUTPUT ON, and other
+SQL/PLSQL statements are entered after the SQL> prompt.
+
+SQL / PL SQL COMMANDS (ENTER IN THIS ORDER)
+
+STEP 1: Create the Stud_Marks table
+
+CREATE TABLE Stud_Marks ( rollno NUMBER(5) PRIMARY KEY, name
+VARCHAR2(30), total_marks NUMBER(6) );
+
+STEP 2: Create the Result table
+
+CREATE TABLE Result ( Roll NUMBER(5), Name VARCHAR2(30), Class
+VARCHAR2(30) );
+
+STEP 3: Insert 10 records into Stud_Marks
+
+INSERT INTO Stud_Marks VALUES (1, ‘Amit’, 1450); INSERT INTO Stud_Marks
+VALUES (2, ‘Priya’, 1200); INSERT INTO Stud_Marks VALUES (3, ‘Rahul’,
+1000); INSERT INTO Stud_Marks VALUES (4, ‘Sneha’, 950); INSERT INTO
+Stud_Marks VALUES (5, ‘Neha’, 920); INSERT INTO Stud_Marks VALUES (6,
+‘Rohan’, 880); INSERT INTO Stud_Marks VALUES (7, ‘Pooja’, 850); INSERT
+INTO Stud_Marks VALUES (8, ‘Kiran’, 830); INSERT INTO Stud_Marks VALUES
+(9, ‘Anil’, 800); INSERT INTO Stud_Marks VALUES (10, ‘Sonal’, 700);
+
+COMMIT;
+
+STEP 4: Check the inserted records
+
+SELECT * FROM Stud_Marks;
+
+STEP 5: Enable PL/SQL output
+
+SET SERVEROUTPUT ON;
+
+STEP 6: Create the stored procedure proc_Grade
+
+CREATE OR REPLACE PROCEDURE proc_Grade IS grade VARCHAR2(30);
+
+BEGIN DELETE FROM Result;
+
+    FOR s IN (SELECT * FROM Stud_Marks)
+    LOOP
+
+        IF s.total_marks BETWEEN 990 AND 1500 THEN
+            grade := 'Distinction';
+
+        ELSIF s.total_marks BETWEEN 900 AND 989 THEN
+            grade := 'First Class';
+
+        ELSIF s.total_marks BETWEEN 825 AND 899 THEN
+            grade := 'Higher Second Class';
+
+        ELSE
+            grade := 'No Category';
+
+        END IF;
+
+        INSERT INTO Result
+        VALUES (s.rollno, s.name, grade);
+
+        DBMS_OUTPUT.PUT_LINE(s.name || ' - ' || grade);
+
+    END LOOP;
+
+    COMMIT;
+
+END; /
+
+NOTE: The slash (/) must be entered on a new line after END; in SQLPlus.
+It tells SQLPlus to compile the procedure definition.
+
+STEP 7: Execute the stored procedure
+
+EXEC proc_Grade;
+
+STEP 8: Display the final result
+
+SELECT * FROM Result;
+
+OPTIONAL: Display results in roll-number order
+
+SELECT * FROM Result ORDER BY Roll;
+
+EXPECTED GRADE CATEGORIES
+
+Marks from 990 to 1500 : Distinction Marks from 900 to 989 : First Class
+Marks from 825 to 899 : Higher Second Class Marks below 825 : No
+Category
+
+EXPECTED OUTPUT FROM EXEC proc_Grade
+
+Amit - Distinction Priya - Distinction Rahul - Distinction Sneha - First
+Class Neha - First Class Rohan - Higher Second Class Pooja - Higher
+Second Class Kiran - Higher Second Class Anil - No Category Sonal - No
+Category
+
+PL/SQL procedure successfully completed.
+
+USEFUL COMMANDS
+
+Show all student marks: SELECT * FROM Stud_Marks;
+
+Show all categorized results: SELECT * FROM Result;
+
+Show results in ascending roll-number order: SELECT * FROM Result ORDER
+BY Roll;
+
+Run the procedure again: EXEC proc_Grade;
+
+Save transaction changes: COMMIT;
+
+Remove all rows from Result (the procedure also does this before
+inserting): DELETE FROM Result;
+
+Exit SQL*Plus: EXIT;
+
+IMPORTANT CONCEPTS FOR VIVA
+
+1.  NUMBER Stores numeric values. Size is optional. NUMBER(5) specifies
+    precision of up to 5 digits.
+
+2.  NUMBER(6,2) Allows 6 digits in total, with 2 digits after the
+    decimal point.
+
+3.  VARCHAR2(30) Stores variable-length character data up to 30
+    characters.
+
+4.  PRIMARY KEY Uniquely identifies each row. It cannot contain
+    duplicate or NULL values.
+
+5.  Stored Procedure A named group of SQL and PL/SQL statements stored
+    in the database and executed when required.
+
+6.  PL/SQL Oracle’s procedural extension to SQL. It supports variables,
+    conditions, loops, and exception handling.
+
+7.  SET SERVEROUTPUT ON Enables messages produced by
+    DBMS_OUTPUT.PUT_LINE to appear in SQL*Plus.
+
+8.  DBMS_OUTPUT.PUT_LINE Displays text or values in the SQL*Plus output.
+
+9.  Cursor FOR LOOP Processes each row returned by its SELECT query. In
+    this program, s represents the current row.
+
+10. IF / ELSIF / ELSE Checks conditions and chooses the matching grade
+    category.
+
+11. BETWEEN Checks whether a value is within a range, including both
+    endpoints.
+
+12. COMMIT Saves transaction changes.
+
+13. DELETE Removes rows but keeps the table structure.
+
+14. DROP Removes the table structure and its data.
+
+15. CREATE OR REPLACE PROCEDURE Creates a procedure, or replaces it if a
+    procedure with that name already exists.
+
+16. Slash (/) In SQL*Plus, runs the PL/SQL program unit currently in the
+    SQL buffer.
+
+MEMORY TRICK
+
+Remember the procedure structure:
+
+CREATE -> IS -> variable -> BEGIN -> LOOP -> IF/ELSIF/ELSE -> INSERT ->
+DBMS_OUTPUT -> END LOOP -> COMMIT -> END -> /
+
+Remember the practical order:
+
+Connect -> Create tables -> Insert records -> COMMIT -> SET SERVEROUTPUT
+ON -> Create procedure -> / -> EXEC procedure -> SELECT result.
+
+END OF PRACTICAL

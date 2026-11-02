@@ -1,0 +1,223 @@
+PROBLEM STATEMENT 6 – PL/SQL EXPLICIT CURSOR
+
+TASK
+
+Create an Employee table with Emp_ID, Emp_Name, Department, and Salary.
+Write a PL/SQL program using an explicit cursor to fetch and display all
+employees whose salary is greater than Rs. 30,000, one record at a time.
+
+  -----------------------------
+  1. UBUNTU TERMINAL COMMANDS
+  -----------------------------
+
+Open Ubuntu Terminal.
+
+Check Oracle Docker container: docker ps -a
+
+Start your Oracle container (replace container_id with your actual
+container name or ID): docker start container_id
+
+Connect to SQL*Plus inside the container: docker exec -it container_id
+sqlplus
+
+NOTE: If your lab uses a different SQL*Plus login command, use the same
+connection command that works in your setup. Enter your Oracle username
+and password if prompted.
+
+  ---------------------
+  2. SQL*PLUS COMMAND
+  ---------------------
+
+After the SQL> prompt appears, enable output:
+
+    SET SERVEROUTPUT ON;
+
+This enables messages printed using DBMS_OUTPUT.PUT_LINE.
+
+  --------------------------
+  3. CREATE EMPLOYEE TABLE
+  --------------------------
+
+    CREATE TABLE Employee (
+        Emp_ID NUMBER PRIMARY KEY,
+        Emp_Name VARCHAR2(30),
+        Department VARCHAR2(30),
+        Salary NUMBER
+    );
+
+  --------------------------
+  4. INSERT SAMPLE RECORDS
+  --------------------------
+
+    INSERT INTO Employee VALUES (1, 'Rahul', 'IT', 45000);
+    INSERT INTO Employee VALUES (2, 'Priya', 'HR', 25000);
+    INSERT INTO Employee VALUES (3, 'Amit', 'Sales', 50000);
+    INSERT INTO Employee VALUES (4, 'Sneha', 'IT', 35000);
+    INSERT INTO Employee VALUES (5, 'Neha', 'Finance', 28000);
+
+Save the inserted records:
+
+    COMMIT;
+
+Optional: Check all inserted records:
+
+    SELECT * FROM Employee;
+
+  -----------------------------------------
+  5. PL/SQL PROGRAM USING EXPLICIT CURSOR
+  -----------------------------------------
+
+    DECLARE
+        CURSOR emp_cursor IS
+            SELECT * FROM Employee
+            WHERE Salary > 30000;
+
+        emp_record Employee%ROWTYPE;
+
+    BEGIN
+        OPEN emp_cursor;
+
+        LOOP
+            FETCH emp_cursor INTO emp_record;
+
+            EXIT WHEN emp_cursor%NOTFOUND;
+
+            DBMS_OUTPUT.PUT_LINE('ID: ' || emp_record.Emp_ID);
+            DBMS_OUTPUT.PUT_LINE('Name: ' || emp_record.Emp_Name);
+            DBMS_OUTPUT.PUT_LINE('Department: ' || emp_record.Department);
+            DBMS_OUTPUT.PUT_LINE('Salary: ' || emp_record.Salary);
+            DBMS_OUTPUT.PUT_LINE('--------------------');
+
+        END LOOP;
+
+        CLOSE emp_cursor;
+    END;
+    /
+
+IMPORTANT: Type the slash (/) on a new line after END; and press Enter.
+The slash executes the PL/SQL block in SQL*Plus. No separate SELECT
+command is needed to display the PL/SQL output.
+
+  --------------------
+  6. EXPECTED OUTPUT
+  --------------------
+
+    ID: 1
+    Name: Rahul
+    Department: IT
+    Salary: 45000
+    --------------------
+    ID: 3
+    Name: Amit
+    Department: Sales
+    Salary: 50000
+    --------------------
+    ID: 4
+    Name: Sneha
+    Department: IT
+    Salary: 35000
+    --------------------
+
+    PL/SQL procedure successfully completed.
+
+Only employees with salary strictly greater than 30000 are displayed. An
+employee earning exactly 30000 would not be included.
+
+  ----------------------------------------------
+  7. COMPLETE EXECUTION ORDER – QUICK REVISION
+  ----------------------------------------------
+
+1.  Open Ubuntu Terminal.
+2.  Run: docker ps -a
+3.  Run: docker start container_id
+4.  Run: docker exec -it container_id sqlplus
+5.  Login if prompted.
+6.  At SQL> run: SET SERVEROUTPUT ON;
+7.  Create the Employee table.
+8.  Insert the five sample records.
+9.  Run: COMMIT;
+10. Execute the complete PL/SQL cursor program.
+11. Type / on a new line and press Enter.
+12. Read the displayed employee details.
+
+  --------------------------------------
+  8. CURSOR PROGRAM – MEMORY STRUCTURE
+  --------------------------------------
+
+Remember the order:
+
+    DECLARE
+        CURSOR cursor_name IS
+            SELECT query;
+
+        record_name table_name%ROWTYPE;
+
+    BEGIN
+        OPEN cursor_name;
+
+        LOOP
+            FETCH cursor_name INTO record_name;
+
+            EXIT WHEN cursor_name%NOTFOUND;
+
+            -- Display the record details
+
+        END LOOP;
+
+        CLOSE cursor_name;
+    END;
+    /
+
+Memory sequence: DECLARE -> OPEN -> FETCH -> EXIT WHEN -> DISPLAY ->
+CLOSE
+
+  ---------------------------------
+  9. OPTIONAL QUERY MODIFICATIONS
+  ---------------------------------
+
+Salary greater than 50000: SELECT * FROM Employee WHERE Salary > 50000;
+
+Salary less than 30000: SELECT * FROM Employee WHERE Salary < 30000;
+
+Employees in the IT department: SELECT * FROM Employee WHERE Department
+= ‘IT’;
+
+Display all employees (remove the WHERE condition): SELECT * FROM
+Employee;
+
+Salary between 20000 and 50000: SELECT * FROM Employee WHERE Salary
+BETWEEN 20000 AND 50000;
+
+Display employees in descending order of salary: SELECT * FROM Employee
+WHERE Salary > 30000 ORDER BY Salary DESC;
+
+  ------------------------------------------
+  10. IMPORTANT COMMANDS AND THEIR PURPOSE
+  ------------------------------------------
+
+SET SERVEROUTPUT ON; Enables DBMS_OUTPUT messages in SQL*Plus.
+
+CREATE TABLE; Creates a new table.
+
+INSERT INTO; Adds records to a table.
+
+COMMIT; Saves the inserted changes.
+
+SELECT; Retrieves records from a table.
+
+OPEN; Opens the explicit cursor and executes its query.
+
+FETCH; Retrieves one row from the cursor.
+
+EXIT WHEN cursor_name%NOTFOUND; Stops the loop when FETCH cannot
+retrieve another row.
+
+DBMS_OUTPUT.PUT_LINE; Displays text and values on the output screen.
+
+CLOSE; Closes the cursor and releases its resources.
+
+END; Marks the end of the PL/SQL block.
+
+/ Executes the PL/SQL block in SQL*Plus.
+
+END OF FILE

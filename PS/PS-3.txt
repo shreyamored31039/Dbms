@@ -1,0 +1,334 @@
+DBMS PRACTICAL - PROBLEM STATEMENT 3 MYSQL ON UBUNTU
+============================================================
+
+PROBLEM STATEMENT Create the following tables with appropriate Primary
+Keys and Foreign Keys, and insert 10 records into each table.
+
+Students(student_id, name, city) Enrollments(enroll_id, student_id,
+course, marks)
+
+1.  Display student names and the courses in which they are enrolled.
+2.  Display all students and their course details, including students
+    who are not enrolled.
+3.  Display names of students enrolled in DBMS along with their marks.
+4.  Display enrollments that do not have a matching student record.
+5.  Display students who have obtained marks less than the average marks
+    of all enrollments.
+6.  Display students who have obtained marks equal to the highest marks.
+7.  Display students who belong to Pune.
+8.  Display students enrolled in Python.
+9.  Create a view named course_average_view displaying course names and
+    average marks. Display all records from the view.
+10. Create an index on Students.city and a unique index on
+    Students.student_id.
+
+  ----------------------------------------------
+  STEP 1: OPEN UBUNTU TERMINAL AND START MYSQL
+  ----------------------------------------------
+
+Open Terminal and enter:
+
+sudo mysql -u root -p
+
+Enter your MySQL password.
+
+If your Ubuntu MySQL installation uses socket authentication, use:
+
+sudo mysql
+
+  -------------------------
+  STEP 2: CREATE DATABASE
+  -------------------------
+
+CREATE DATABASE CollegeDB;
+
+USE CollegeDB;
+
+  -----------------------
+  STEP 3: CREATE TABLES
+  -----------------------
+
+Create Students table:
+
+CREATE TABLE Students ( student_id INT PRIMARY KEY, name VARCHAR(50),
+city VARCHAR(50) );
+
+Create Enrollments table:
+
+CREATE TABLE Enrollments ( enroll_id INT PRIMARY KEY, student_id INT,
+course VARCHAR(50), marks INT, FOREIGN KEY (student_id) REFERENCES
+Students(student_id) );
+
+NOTE: - Students.student_id is the PRIMARY KEY. - Enrollments.enroll_id
+is the PRIMARY KEY. - Enrollments.student_id is a FOREIGN KEY
+referencing Students.student_id. - The foreign key prevents inserting an
+enrollment for a student who does not exist.
+
+  -----------------------------------------
+  STEP 4: INSERT 10 RECORDS INTO STUDENTS
+  -----------------------------------------
+
+INSERT INTO Students VALUES (1, ‘Priya’, ‘Pune’), (2, ‘Rahul’,
+‘Mumbai’), (3, ‘Amit’, ‘Nashik’), (4, ‘Sneha’, ‘Pune’), (5, ‘Rohan’,
+‘Mumbai’), (6, ‘Neha’, ‘Delhi’), (7, ‘Karan’, ‘Pune’), (8, ‘Pooja’,
+‘Nashik’), (9, ‘Akash’, ‘Delhi’), (10, ‘Anjali’, ‘Mumbai’);
+
+  --------------------------------------------
+  STEP 5: INSERT 10 RECORDS INTO ENROLLMENTS
+  --------------------------------------------
+
+INSERT INTO Enrollments VALUES (101, 1, ‘DBMS’, 85), (102, 2, ‘Python’,
+90), (103, 3, ‘Java’, 70), (104, 4, ‘DBMS’, 95), (105, 5, ‘Python’, 80),
+(106, 6, ‘Java’, 60), (107, 7, ‘DBMS’, 75), (108, 8, ‘Python’, 88),
+(109, 9, ‘Java’, 95), (110, 10, ‘DBMS’, 65);
+
+  --------------------------------
+  STEP 6: CHECK INSERTED RECORDS
+  --------------------------------
+
+SELECT * FROM Students;
+
+SELECT * FROM Enrollments;
+
+  ------------------------------
+  STEP 7: SOLVE THE 10 QUERIES
+  ------------------------------
+
+Q1. Display student names and the courses in which they are enrolled.
+
+SELECT Students.name, Enrollments.course FROM Students JOIN Enrollments
+ON Students.student_id = Enrollments.student_id;
+
+NOTE: JOIN returns matching records from both tables. Aliases are
+optional. The same query can be written using aliases:
+
+SELECT s.name, e.course FROM Students s JOIN Enrollments e ON
+s.student_id = e.student_id;
+
+Q2. Display all students and their course details, including students
+who are not enrolled in any course.
+
+SELECT Students.name, Enrollments.course, Enrollments.marks FROM
+Students LEFT JOIN Enrollments ON Students.student_id =
+Enrollments.student_id;
+
+NOTE: LEFT JOIN displays all records from the left table (Students). If
+a student has no enrollment, the enrollment columns show NULL.
+
+Q3. Display the names of students enrolled in DBMS along with their
+marks.
+
+SELECT Students.name, Enrollments.course, Enrollments.marks FROM
+Students JOIN Enrollments ON Students.student_id =
+Enrollments.student_id WHERE Enrollments.course = ‘DBMS’;
+
+NOTE: The course column is optional in the SELECT list if the question
+only asks for names and marks. It can be included to display the course
+name too.
+
+Equivalent query using aliases:
+
+SELECT s.name, e.course, e.marks FROM Students s JOIN Enrollments e ON
+s.student_id = e.student_id WHERE e.course = ‘DBMS’;
+
+Q4. Display enrollments that do not have a matching student record.
+
+LEFT JOIN version without aliases:
+
+SELECT Enrollments.enroll_id, Enrollments.student_id,
+Enrollments.course, Enrollments.marks FROM Enrollments LEFT JOIN
+Students ON Enrollments.student_id = Students.student_id WHERE
+Students.student_id IS NULL;
+
+Equivalent RIGHT JOIN version without aliases:
+
+SELECT Enrollments.enroll_id, Enrollments.student_id,
+Enrollments.course, Enrollments.marks FROM Students RIGHT JOIN
+Enrollments ON Students.student_id = Enrollments.student_id WHERE
+Students.student_id IS NULL;
+
+NOTE: - LEFT JOIN keeps all records from the left table. - RIGHT JOIN
+keeps all records from the right table. - IS NULL finds rows without a
+matching student. - With the given foreign key and inserted data, this
+query returns an empty result because every enrollment has a matching
+student. - The foreign key normally prevents inserting an enrollment
+with a non-existing student_id.
+
+Q5. Display students who have obtained marks less than the average marks
+of all enrollments.
+
+SELECT Students.name, Enrollments.marks FROM Students JOIN Enrollments
+ON Students.student_id = Enrollments.student_id WHERE Enrollments.marks
+< ( SELECT AVG(marks) FROM Enrollments );
+
+NOTE: The inner query calculates the overall average marks. The outer
+query displays students whose marks are below that average.
+
+Q6. Display students who have obtained marks equal to the highest marks.
+
+SELECT Students.name, Enrollments.marks FROM Students JOIN Enrollments
+ON Students.student_id = Enrollments.student_id WHERE Enrollments.marks
+= ( SELECT MAX(marks) FROM Enrollments );
+
+NOTE: MAX(marks) finds the highest marks. The query displays every
+student who has those marks.
+
+Q7. Display students who belong to Pune.
+
+SELECT * FROM Students WHERE city = ‘Pune’;
+
+NOTE: SELECT * displays all columns. To display only name and city, use:
+
+SELECT name, city FROM Students WHERE city = ‘Pune’;
+
+Q8. Display students enrolled in Python.
+
+SELECT Students.name, Enrollments.course FROM Students JOIN Enrollments
+ON Students.student_id = Enrollments.student_id WHERE Enrollments.course
+= ‘Python’;
+
+Equivalent query using aliases:
+
+SELECT s.name, e.course FROM Students s JOIN Enrollments e ON
+s.student_id = e.student_id WHERE e.course = ‘Python’;
+
+Q9. Create a view named course_average_view displaying course names and
+their average marks. Display all records from the view.
+
+CREATE VIEW course_average_view AS SELECT course, AVG(marks) AS
+average_marks FROM Enrollments GROUP BY course;
+
+Display all records from the view:
+
+SELECT * FROM course_average_view;
+
+NOTE: - AVG(marks) calculates the average marks. - GROUP BY course
+groups records course-wise. - We use GROUP BY course, not GROUP BY
+marks, because the question asks for average marks separately for each
+course. - AS average_marks gives a name to the calculated column. - A
+view is a virtual table based on a SELECT query.
+
+Expected output:
+
++--------+---------------+
+| course | average_marks |
++--------+---------------+
+| DBMS   |       80.0000 |
+| Java   |       75.0000 |
+| Python |       86.0000 |
++--------+---------------+
+
+The order of rows may vary unless ORDER BY is used.
+
+Optional query to display the view in alphabetical order:
+
+SELECT * FROM course_average_view ORDER BY course;
+
+Q10. Create an index on Students.city and a unique index on
+Students.student_id.
+
+Create a normal index:
+
+CREATE INDEX idx_city ON Students(city);
+
+Create a unique index:
+
+CREATE UNIQUE INDEX idx_student_id ON Students(student_id);
+
+NOTE: - An index can help speed up searches. - A UNIQUE index prevents
+duplicate values. - student_id is already a PRIMARY KEY, so it is
+already unique and indexed. The additional unique index is redundant and
+MySQL may report a duplicate key name or equivalent index error
+depending on the server/version. - If the unique index command reports
+that an equivalent index already exists, the PRIMARY KEY already
+provides uniqueness; do not remove it.
+
+  -------------------------------------------------
+  STEP 8: QUICK REVISION - IMPORTANT SQL PATTERNS
+  -------------------------------------------------
+
+1.  JOIN: combine matching records from two tables.
+
+SELECT columns FROM Table1 JOIN Table2 ON Table1.common_id =
+Table2.common_id;
+
+2.  LEFT JOIN: keep all records from the left table.
+
+SELECT columns FROM Table1 LEFT JOIN Table2 ON Table1.common_id =
+Table2.common_id;
+
+3.  RIGHT JOIN: keep all records from the right table.
+
+SELECT columns FROM Table1 RIGHT JOIN Table2 ON Table1.common_id =
+Table2.common_id;
+
+4.  WHERE: filter individual rows.
+
+SELECT * FROM Students WHERE city = ‘Pune’;
+
+5.  AVG: calculate average.
+
+SELECT AVG(marks) FROM Enrollments;
+
+6.  MAX: find highest value.
+
+SELECT MAX(marks) FROM Enrollments;
+
+7.  Subquery with AVG:
+
+WHERE marks < (SELECT AVG(marks) FROM Enrollments);
+
+8.  Subquery with MAX:
+
+WHERE marks = (SELECT MAX(marks) FROM Enrollments);
+
+9.  GROUP BY: calculate an aggregate separately for each group.
+
+SELECT course, AVG(marks) FROM Enrollments GROUP BY course;
+
+10. HAVING: filter groups after GROUP BY.
+
+SELECT course, AVG(marks) FROM Enrollments GROUP BY course HAVING
+AVG(marks) > 80;
+
+11. VIEW:
+
+CREATE VIEW view_name AS SELECT columns FROM table_name;
+
+SELECT * FROM view_name;
+
+12. INDEX:
+
+CREATE INDEX index_name ON table_name(column_name);
+
+13. UNIQUE INDEX:
+
+CREATE UNIQUE INDEX index_name ON table_name(column_name);
+
+  ----------------------------------------
+  STEP 9: IMPORTANT CONCEPTS TO REMEMBER
+  ----------------------------------------
+
+SELECT * = displays all columns. SELECT name = displays only the name
+column. WHERE = filters individual rows. JOIN = combines matching
+records. LEFT JOIN = keeps all rows from the left table. RIGHT JOIN =
+keeps all rows from the right table. IS NULL = checks for missing/NULL
+values. AVG() = calculates average. MAX() = finds the highest value.
+COUNT() = counts records. GROUP BY = groups rows with the same value.
+HAVING = filters groups. VIEW = virtual table based on a SELECT query.
+INDEX = helps speed up data retrieval. PRIMARY KEY = uniquely identifies
+each row. FOREIGN KEY = links a column to a key in another table. AS =
+gives an alias; optional for table aliases in MySQL.
+
+  ------------------
+  END OF PRACTICAL
+  ------------------
+
+IMPORTANT EXECUTION NOTES: 1. Execute commands in the order given. 2.
+Run USE CollegeDB; before creating tables or inserting records. 3.
+Insert Students records before Enrollments records because of the
+foreign key relationship. 4. Run SELECT queries to see their results. 5.
+CREATE VIEW and CREATE INDEX are commands; run a separate SELECT to
+display the view. 6. If you execute the complete script again, the
+database/tables/view/indexes may already exist. Drop or recreate them
+carefully before rerunning.

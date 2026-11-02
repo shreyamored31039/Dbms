@@ -1,0 +1,436 @@
+DBMS PRACTICAL - PROBLEM STATEMENT 7
+DATABASE TRIGGER: LIBRARY AND LIBRARY_AUDIT
+Ubuntu + Oracle SQL*Plus
+============================================================
+
+AIM
+---
+Create Library and Library_Audit tables, insert 10 records into Library,
+and create a trigger that saves the OLD values in Library_Audit whenever
+a record in Library is updated or deleted.
+
+IMPORTANT
+---------
+- The trigger runs automatically for UPDATE and DELETE.
+- :OLD refers to the values before the operation.
+- UPDATING and DELETING identify which operation activated the trigger.
+- SYSDATE inserts the current date and time automatically.
+- SET SERVEROUTPUT ON is NOT required for this program because there is
+  no DBMS_OUTPUT.PUT_LINE statement.
+
+PART 1: UBUNTU TERMINAL COMMANDS
+===============================
+
+1. Open Ubuntu Terminal.
+
+2. Check the Oracle container:
+   docker ps -a
+
+3. If the Oracle container is stopped, start it:
+   docker start <container_id>
+
+   Replace <container_id> with the actual container ID or container name.
+   If the container is already running, do not start it again.
+
+4. Connect to Oracle using your configured command:
+   orals
+
+5. Wait until the SQL prompt appears:
+   SQL>
+
+   Now enter the SQL and PL/SQL commands below.
+
+
+PART 2: CREATE THE LIBRARY TABLE
+================================
+
+CREATE TABLE Library (
+    book_id NUMBER PRIMARY KEY,
+    book_name VARCHAR2(50),
+    author VARCHAR2(50),
+    category VARCHAR2(30),
+    date DATE,
+    operation VARCHAR2(20)
+);
+
+Expected message:
+Table created.
+
+
+PART 3: CREATE THE LIBRARY_AUDIT TABLE
+======================================
+
+CREATE TABLE Library_Audit (
+    book_id NUMBER,
+    book_name VARCHAR2(50),
+    author VARCHAR2(50),
+    category VARCHAR2(30),
+    date DATE,
+    operation VARCHAR2(20)
+);
+
+Expected message:
+Table created.
+
+
+PART 4: INSERT 10 RECORDS INTO LIBRARY
+======================================
+
+INSERT INTO Library VALUES
+(1, 'DBMS', 'Korth', 'Computer', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(2, 'Java', 'James Gosling', 'Programming', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(3, 'Python', 'Guido', 'Programming', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(4, 'C Programming', 'Dennis Ritchie', 'Programming', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(5, 'Operating System', 'Galvin', 'Computer', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(6, 'Networking', 'Tanenbaum', 'Computer', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(7, 'HTML', 'Tim Berners', 'Web', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(8, 'CSS', 'Hakon Wium', 'Web', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(9, 'JavaScript', 'Brendan Eich', 'Web', SYSDATE, 'INSERT');
+
+INSERT INTO Library VALUES
+(10, 'C++', 'Bjarne', 'Programming', SYSDATE, 'INSERT');
+
+Expected message after each successful statement:
+1 row created.
+
+
+PART 5: DISPLAY THE LIBRARY RECORDS
+===================================
+
+SELECT * FROM Library;
+
+This displays the 10 records inserted into Library.
+
+
+PART 6: CREATE THE TRIGGER
+==========================
+
+CREATE OR REPLACE TRIGGER library_trigger
+BEFORE UPDATE OR DELETE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit
+    VALUES (
+        :OLD.book_id,
+        :OLD.book_name,
+        :OLD.author,
+        :OLD.category,
+        :OLD.date,
+        CASE
+            WHEN UPDATING THEN 'UPDATE'
+            WHEN DELETING THEN 'DELETE'
+        END
+    );
+END;
+/
+
+Expected message:
+Trigger created.
+
+IMPORTANT:
+- Type the slash (/) on a separate line after END;
+- In SQL*Plus, the slash executes the complete PL/SQL block.
+
+
+PART 7: TEST THE UPDATE OPERATION
+================================
+
+UPDATE Library
+SET book_name = 'Advanced DBMS'
+WHERE book_id = 1;
+
+Expected message:
+1 row updated.
+
+The trigger automatically copies the OLD values of book 1 into
+Library_Audit before the update takes place.
+
+
+PART 8: TEST THE DELETE OPERATION
+================================
+
+DELETE FROM Library
+WHERE book_id = 2;
+
+Expected message:
+1 row deleted.
+
+The trigger automatically copies the OLD values of book 2 into
+Library_Audit before the delete takes place.
+
+
+PART 9: DISPLAY THE AUDIT TABLE
+===============================
+
+SELECT * FROM Library_Audit;
+
+Expected audit records (important columns):
+
+BOOK_ID    BOOK_NAME    OPERATION
+1          DBMS         UPDATE
+2          Java         DELETE
+
+The audit table also contains the old author, category and date values.
+
+
+PART 10: CHECK THE UPDATED LIBRARY TABLE
+========================================
+
+SELECT * FROM Library;
+
+Book 1 should now have the name Advanced DBMS.
+Book 2 should no longer be present.
+
+
+PART 11: TRANSACTION COMMAND
+============================
+
+COMMIT;
+
+COMMIT saves the changes made in the current transaction.
+
+ROLLBACK;
+
+ROLLBACK undoes changes that have not yet been committed.
+Do not run ROLLBACK after COMMIT expecting it to undo the committed work.
+
+
+PART 12: ENABLE, DISABLE AND DROP THE TRIGGER
+=============================================
+
+Disable the trigger:
+
+ALTER TRIGGER library_trigger DISABLE;
+
+Enable the trigger again:
+
+ALTER TRIGGER library_trigger ENABLE;
+
+Drop (remove) the trigger:
+
+DROP TRIGGER library_trigger;
+
+NOTE:
+Only run DROP TRIGGER if you intentionally want to remove the trigger.
+You do not need to drop it during the normal practical execution.
+
+
+PART 13: USEFUL SQL COMMANDS
+============================
+
+Display all Library records:
+
+SELECT * FROM Library;
+
+Display all audit records:
+
+SELECT * FROM Library_Audit;
+
+Display only UPDATE audit records:
+
+SELECT * FROM Library_Audit
+WHERE operation = 'UPDATE';
+
+Display only DELETE audit records:
+
+SELECT * FROM Library_Audit
+WHERE operation = 'DELETE';
+
+
+PART 14: TRIGGER CODE - LINE-BY-LINE QUICK REVISION
+===================================================
+
+CREATE OR REPLACE TRIGGER library_trigger
+    Creates a trigger or replaces an existing trigger with this name.
+
+BEFORE UPDATE OR DELETE ON Library
+    Runs before an UPDATE or DELETE operation on Library.
+
+FOR EACH ROW
+    Runs once for every affected row. This is a row-level trigger.
+
+BEGIN
+    Starts the executable PL/SQL section.
+
+INSERT INTO Library_Audit
+    Inserts a record into the audit table.
+
+:OLD.book_id, :OLD.book_name, :OLD.author,
+:OLD.category, :OLD.date
+    Accesses the old values before the update or delete.
+
+WHEN UPDATING THEN 'UPDATE'
+    Stores UPDATE in the operation column when an update activates
+    the trigger.
+
+WHEN DELETING THEN 'DELETE'
+    Stores DELETE in the operation column when a delete activates
+    the trigger.
+
+END;
+    Ends the PL/SQL block.
+
+/ 
+    Executes the stored PL/SQL block in SQL*Plus.
+
+
+PART 15: EASY WAY TO REMEMBER THE PROGRAM
+=========================================
+
+Remember: T - I - T - U - D
+
+T = Tables
+    Create Library and Library_Audit.
+
+I = Insert
+    Insert 10 records into Library.
+
+T = Trigger
+    Create the BEFORE UPDATE OR DELETE trigger.
+
+U = Update
+    Update a book and check the audit table.
+
+D = Delete
+    Delete a book and check the audit table.
+
+One-line memory sentence:
+"Create tables, insert records, create trigger, update, delete, check audit."
+
+
+PART 16: IMPORTANT VIVA QUESTIONS AND SHORT ANSWERS
+===================================================
+
+1. What is a trigger?
+   A trigger is a stored PL/SQL block that executes automatically when
+   a specified event occurs.
+
+2. Why do we use triggers?
+   To automate actions, enforce rules and maintain audit records.
+
+3. What is an audit table?
+   A table that stores the history of changes made to data.
+
+4. What is :OLD?
+   It accesses the previous values of a record before UPDATE or DELETE.
+
+5. What is :NEW?
+   It accesses the new values of a record during INSERT or UPDATE.
+
+6. Why did you use :OLD instead of :NEW?
+   Because the question asks us to store the old values.
+
+7. What is FOR EACH ROW?
+   It makes the trigger execute separately for every affected row.
+
+8. What is a row-level trigger?
+   A trigger that executes once for each affected row.
+
+9. What is a statement-level trigger?
+   A trigger that executes once for the whole SQL statement, regardless
+   of the number of affected rows.
+
+10. What does BEFORE UPDATE OR DELETE mean?
+    The trigger runs before an UPDATE or DELETE operation on Library.
+
+11. What is UPDATING?
+    It checks whether an UPDATE operation activated the trigger.
+
+12. What is DELETING?
+    It checks whether a DELETE operation activated the trigger.
+
+13. What is the difference between BEFORE and AFTER triggers?
+    BEFORE runs before the operation; AFTER runs after the operation.
+
+14. What happens when a new record is inserted?
+    Nothing, because this trigger is defined only for UPDATE and DELETE.
+
+15. What happens when multiple records are updated?
+    The trigger runs once for each affected row because FOR EACH ROW
+    is used.
+
+16. Can we execute a trigger manually?
+    No. It runs automatically when its specified event occurs.
+
+17. Can one table have multiple triggers?
+    Yes.
+
+18. Can a trigger call a procedure?
+    Yes.
+
+19. What is a DML trigger?
+    A trigger activated by INSERT, UPDATE or DELETE operations.
+
+20. What is SYSDATE?
+    An Oracle function that returns the current system date and time.
+
+21. What is a primary key?
+    A column or group of columns that uniquely identifies each row and
+    cannot contain NULL values.
+
+22. Can Library_Audit contain duplicate book IDs?
+    Yes. A book may be updated or deleted in different operations, so
+    the same book ID can appear more than once.
+
+23. What is the difference between a trigger and a procedure?
+    A trigger runs automatically for its specified event. A procedure
+    is generally executed by calling it.
+
+24. What does CREATE OR REPLACE mean?
+    It creates a trigger or replaces an existing trigger with the same
+    name.
+
+25. Why is the slash used after END;?
+    SQL*Plus uses / on a separate line to execute the PL/SQL block.
+
+26. Can we use AFTER instead of BEFORE?
+    Yes. An AFTER UPDATE OR DELETE trigger can also access :OLD values.
+
+27. What is a mutating table error?
+    It can occur when a row-level trigger tries to query or modify the
+    same table that is currently being modified, in a way Oracle does
+    not allow.
+
+28. What happens if the UPDATE or DELETE statement fails?
+    The trigger's audit insertion is part of the same transaction.
+    If the statement is rolled back, the audit insertion is rolled back
+    too.
+
+
+FINAL PRACTICAL EXECUTION ORDER
+===============================
+
+1. Open Ubuntu Terminal.
+2. Run: docker ps -a
+3. Start the container if it is stopped:
+   docker start <container_id>
+4. Connect using: orals
+5. Wait for: SQL>
+6. Create Library table.
+7. Create Library_Audit table.
+8. Insert all 10 records.
+9. Run: SELECT * FROM Library;
+10. Create the trigger and execute it using / on a separate line.
+11. Test UPDATE.
+12. Test DELETE.
+13. Run: SELECT * FROM Library_Audit;
+14. Run: SELECT * FROM Library;
+15. Run COMMIT; to save the changes.
+
+END OF PRACTICAL NOTES

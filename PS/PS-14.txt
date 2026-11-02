@@ -1,0 +1,588 @@
+PROBLEM STATEMENT 14 - CUSTOMER, BRANCH, ACCOUNT AND LOAN
+===========================================================
+
+DATABASE: Oracle SQL
+PLATFORM: Ubuntu / Linux using SQL*Plus
+
+PURPOSE
+-------
+Create four related tables, insert 10 records into each table, and execute
+the 10 questions in the problem statement.
+
+IMPORTANT
+---------
+1. Run the statements in the order shown below.
+2. SQL commands ending with semicolon (;) can be entered in SQL*Plus.
+3. Run COMMIT; after INSERT, UPDATE, or DELETE operations.
+4. The examples use Oracle SQL syntax.
+5. The sample data deliberately includes customers with NULL phone numbers.
+   Those two customers do not have account or loan records, so Question 9
+   can be executed without violating foreign-key constraints.
+
+
+PART 1 - OPEN ORACLE SQL*PLUS
+----------------------------
+
+Open Ubuntu Terminal and connect to Oracle:
+
+    sqlplus username/password
+
+Example (use your own Oracle username and password):
+
+    sqlplus system/your_password
+
+After the SQL> prompt appears, enable output and check the connection:
+
+    SET SERVEROUTPUT ON;
+    SHOW USER;
+
+
+PART 2 - CREATE TABLES
+----------------------
+
+Create the parent tables first: Branch and Customer.
+Then create Account and Loan because they contain foreign keys.
+
+1. Create Branch table
+
+    CREATE TABLE Branch (
+        branch_id NUMBER(5) PRIMARY KEY,
+        branch_name VARCHAR2(30) NOT NULL,
+        branch_city VARCHAR2(30) NOT NULL
+    );
+
+2. Create Customer table
+
+    CREATE TABLE Customer (
+        cust_id NUMBER(5) PRIMARY KEY,
+        cust_name VARCHAR2(40) NOT NULL,
+        city VARCHAR2(30) NOT NULL,
+        phone VARCHAR2(15)
+    );
+
+3. Create Account table
+
+    CREATE TABLE Account (
+        acc_no NUMBER(5) PRIMARY KEY,
+        cust_id NUMBER(5) NOT NULL,
+        branch_id NUMBER(5) NOT NULL,
+        balance NUMBER(10,2) DEFAULT 0,
+        CONSTRAINT fk_account_customer
+            FOREIGN KEY (cust_id) REFERENCES Customer(cust_id),
+        CONSTRAINT fk_account_branch
+            FOREIGN KEY (branch_id) REFERENCES Branch(branch_id),
+        CONSTRAINT chk_account_balance CHECK (balance >= 0)
+    );
+
+4. Create Loan table
+
+    CREATE TABLE Loan (
+        loan_no NUMBER(5) PRIMARY KEY,
+        cust_id NUMBER(5) NOT NULL,
+        branch_id NUMBER(5) NOT NULL,
+        amount NUMBER(10,2) NOT NULL,
+        CONSTRAINT fk_loan_customer
+            FOREIGN KEY (cust_id) REFERENCES Customer(cust_id),
+        CONSTRAINT fk_loan_branch
+            FOREIGN KEY (branch_id) REFERENCES Branch(branch_id),
+        CONSTRAINT chk_loan_amount CHECK (amount >= 0)
+    );
+
+Check that all four tables are created:
+
+    SELECT table_name
+    FROM user_tables
+    WHERE table_name IN ('CUSTOMER', 'BRANCH', 'ACCOUNT', 'LOAN')
+    ORDER BY table_name;
+
+To view a table structure:
+
+    DESC Customer;
+    DESC Branch;
+    DESC Account;
+    DESC Loan;
+
+
+PART 3 - INSERT 10 RECORDS INTO EACH TABLE
+-------------------------------------------
+
+Insert Branch records first:
+
+    INSERT INTO Branch VALUES (1, 'Akurdi', 'Pune');
+    INSERT INTO Branch VALUES (2, 'Chinchwad', 'Pune');
+    INSERT INTO Branch VALUES (3, 'Deccan', 'Pune');
+    INSERT INTO Branch VALUES (4, 'Andheri', 'Mumbai');
+    INSERT INTO Branch VALUES (5, 'Dadar', 'Mumbai');
+    INSERT INTO Branch VALUES (6, 'Kothrud', 'Pune');
+    INSERT INTO Branch VALUES (7, 'Thane', 'Mumbai');
+    INSERT INTO Branch VALUES (8, 'Baner', 'Pune');
+    INSERT INTO Branch VALUES (9, 'Vashi', 'Navi Mumbai');
+    INSERT INTO Branch VALUES (10, 'Nigdi', 'Pune');
+
+Insert Customer records:
+
+    INSERT INTO Customer VALUES (101, 'Pranav', 'Pune', '9876543210');
+    INSERT INTO Customer VALUES (102, 'Aarav', 'Mumbai', '9876543211');
+    INSERT INTO Customer VALUES (103, 'Priya', 'Pune', '9876543212');
+    INSERT INTO Customer VALUES (104, 'Sneha', 'Mumbai', '9876543213');
+    INSERT INTO Customer VALUES (105, 'Rahul', 'Pune', '9876543214');
+    INSERT INTO Customer VALUES (106, 'Ananya', 'Delhi', '9876543215');
+    INSERT INTO Customer VALUES (107, 'Pooja', 'Pune', '9876543216');
+    INSERT INTO Customer VALUES (108, 'Karan', 'Mumbai', '9876543217');
+    INSERT INTO Customer VALUES (109, 'Meera', 'Pune', NULL);
+    INSERT INTO Customer VALUES (110, 'Rohan', 'Mumbai', NULL);
+
+Insert Account records:
+
+    INSERT INTO Account VALUES (2001, 101, 1, 25000);
+    INSERT INTO Account VALUES (2002, 102, 2, 35000);
+    INSERT INTO Account VALUES (2003, 103, 3, 45000);
+    INSERT INTO Account VALUES (2004, 104, 4, 55000);
+    INSERT INTO Account VALUES (2005, 105, 5, 30000);
+    INSERT INTO Account VALUES (2006, 106, 6, 40000);
+    INSERT INTO Account VALUES (2007, 107, 7, 50000);
+    INSERT INTO Account VALUES (2008, 108, 8, 60000);
+    INSERT INTO Account VALUES (2009, 101, 9, 65000);
+    INSERT INTO Account VALUES (2010, 103, 10, 70000);
+
+Insert Loan records:
+
+    INSERT INTO Loan VALUES (3001, 101, 1, 60000);
+    INSERT INTO Loan VALUES (3002, 102, 1, 50000);
+    INSERT INTO Loan VALUES (3003, 103, 2, 70000);
+    INSERT INTO Loan VALUES (3004, 104, 2, 40000);
+    INSERT INTO Loan VALUES (3005, 105, 3, 25000);
+    INSERT INTO Loan VALUES (3006, 106, 4, 120000);
+    INSERT INTO Loan VALUES (3007, 107, 5, 80000);
+    INSERT INTO Loan VALUES (3008, 108, 6, 45000);
+    INSERT INTO Loan VALUES (3009, 101, 7, 30000);
+    INSERT INTO Loan VALUES (3010, 103, 8, 90000);
+
+Save all inserted records:
+
+    COMMIT;
+
+Check record counts (each query should return 10):
+
+    SELECT COUNT(*) AS total_customers FROM Customer;
+    SELECT COUNT(*) AS total_branches FROM Branch;
+    SELECT COUNT(*) AS total_accounts FROM Account;
+    SELECT COUNT(*) AS total_loans FROM Loan;
+
+Display all records:
+
+    SELECT * FROM Customer;
+    SELECT * FROM Branch;
+    SELECT * FROM Account;
+    SELECT * FROM Loan;
+
+
+PART 4 - SOLUTIONS TO THE 10 QUERIES
+------------------------------------
+
+QUERY 1:
+Display all customers who live in Pune or Mumbai, arranged in alphabetical
+order of their names.
+
+    SELECT *
+    FROM Customer
+    WHERE city IN ('Pune', 'Mumbai')
+    ORDER BY cust_name ASC;
+
+Explanation:
+- IN checks whether city is Pune or Mumbai.
+- ORDER BY cust_name ASC arranges names from A to Z.
+- ASC means ascending order.
+
+
+QUERY 2:
+Display the names of customers whose names contain the letter 'a'.
+
+    SELECT cust_name
+    FROM Customer
+    WHERE LOWER(cust_name) LIKE '%a%';
+
+Explanation:
+- LIKE is used for pattern matching.
+- % means any number of characters.
+- '%a%' finds names containing the letter a anywhere.
+- LOWER makes the search case-insensitive.
+
+
+QUERY 3:
+Display all customers whose phone number is NOT NULL.
+
+    SELECT *
+    FROM Customer
+    WHERE phone IS NOT NULL;
+
+Explanation:
+- IS NOT NULL checks that a value is present.
+- Do not use phone != NULL. NULL must be checked with IS NULL or
+  IS NOT NULL.
+
+
+QUERY 4:
+Display customers who live in Pune and whose names start with 'P',
+OR customers who live in Mumbai.
+
+    SELECT *
+    FROM Customer
+    WHERE (city = 'Pune' AND cust_name LIKE 'P%')
+       OR city = 'Mumbai';
+
+Explanation:
+- AND means both conditions must be true.
+- OR means either condition can be true.
+- P% means the name starts with P.
+- Parentheses make the intended condition clear.
+
+
+QUERY 5:
+Display the maximum loan amount and the average loan amount for each branch.
+
+    SELECT branch_id,
+           MAX(amount) AS maximum_loan,
+           ROUND(AVG(amount), 2) AS average_loan
+    FROM Loan
+    GROUP BY branch_id
+    ORDER BY branch_id;
+
+Explanation:
+- MAX(amount) returns the highest loan amount in each branch.
+- AVG(amount) calculates the average loan amount.
+- GROUP BY branch_id makes one group for each branch.
+- ROUND(..., 2) displays two digits after the decimal point.
+
+
+QUERY 6:
+Display branches whose total loan amount is greater than Rs. 1,00,000.
+
+    SELECT b.branch_id,
+           b.branch_name,
+           SUM(l.amount) AS total_loan_amount
+    FROM Branch b
+    JOIN Loan l ON b.branch_id = l.branch_id
+    GROUP BY b.branch_id, b.branch_name
+    HAVING SUM(l.amount) > 100000
+    ORDER BY b.branch_id;
+
+Explanation:
+- SUM(amount) calculates the total loan amount in each branch.
+- GROUP BY creates branch-wise groups.
+- HAVING filters groups after aggregation.
+- WHERE is generally used to filter rows; HAVING is used to filter groups.
+
+
+QUERY 7:
+Display each account number along with its balance after adding Rs. 500.
+Do not modify the actual balance.
+
+    SELECT acc_no,
+           balance,
+           balance + 500 AS balance_after_adding_500
+    FROM Account
+    ORDER BY acc_no;
+
+Explanation:
+- balance + 500 calculates a new value only for display.
+- This SELECT statement does not update the table.
+- The original balance remains unchanged.
+
+
+QUERY 8:
+Change the branch of account number 2005 to a different branch.
+
+First display the current record:
+
+    SELECT *
+    FROM Account
+    WHERE acc_no = 2005;
+
+Update its branch_id from 5 to 6:
+
+    UPDATE Account
+    SET branch_id = 6
+    WHERE acc_no = 2005;
+
+Save the change:
+
+    COMMIT;
+
+Verify the updated record:
+
+    SELECT *
+    FROM Account
+    WHERE acc_no = 2005;
+
+Explanation:
+- Account 2005 originally belongs to branch_id 5.
+- It is moved to branch_id 6 (Kothrud).
+- Branch_id 6 must already exist in Branch because it is a foreign key.
+- UPDATE changes the stored record. Unlike Query 7, this is a permanent
+  data modification after COMMIT.
+
+
+QUERY 9:
+Delete all customers whose phone number is NULL.
+
+Check which customers have NULL phone numbers:
+
+    SELECT *
+    FROM Customer
+    WHERE phone IS NULL;
+
+Delete them:
+
+    DELETE FROM Customer
+    WHERE phone IS NULL;
+
+Save the deletion:
+
+    COMMIT;
+
+Verify:
+
+    SELECT *
+    FROM Customer
+    WHERE phone IS NULL;
+
+Expected result: no rows selected.
+
+IMPORTANT FOREIGN KEY NOTE:
+In this sample data, customers 109 and 110 have NULL phone numbers and
+do not have Account or Loan records. Therefore, the DELETE statement works
+without violating foreign-key constraints.
+
+If a customer with a NULL phone number has related Account or Loan records,
+Oracle may reject the deletion because Account.cust_id and Loan.cust_id
+reference Customer.cust_id. In that situation, related child rows must be
+handled first, or an appropriate ON DELETE CASCADE rule must have been
+defined when creating the foreign keys. Do not delete child records unless
+that is intended.
+
+
+QUERY 10(a):
+Display customers who have BOTH an account and a loan using INTERSECT.
+
+    SELECT cust_id
+    FROM Account
+    INTERSECT
+    SELECT cust_id
+    FROM Loan;
+
+To display customer IDs with their names:
+
+    SELECT cust_id, cust_name
+    FROM Customer
+    WHERE cust_id IN (
+        SELECT cust_id FROM Account
+        INTERSECT
+        SELECT cust_id FROM Loan
+    )
+    ORDER BY cust_id;
+
+Explanation:
+- INTERSECT returns only the common rows present in both query results.
+- Here it finds customers who have at least one account and at least one loan.
+- Both SELECT statements in an INTERSECT must return the same number of
+  columns with compatible data types.
+
+
+QUERY 10(b):
+Display customers who have an account but NO loan using MINUS.
+
+    SELECT cust_id
+    FROM Account
+    MINUS
+    SELECT cust_id
+    FROM Loan;
+
+To display customer IDs with their names:
+
+    SELECT cust_id, cust_name
+    FROM Customer
+    WHERE cust_id IN (
+        SELECT cust_id FROM Account
+        MINUS
+        SELECT cust_id FROM Loan
+    )
+    ORDER BY cust_id;
+
+Explanation:
+- MINUS returns rows from the first SELECT that are not present in the
+  second SELECT.
+- Here it finds customers who have an account but do not have a loan.
+- In Oracle, MINUS is used for set difference.
+
+
+PART 5 - USEFUL SQL*PLUS COMMANDS
+--------------------------------
+
+    SHOW USER;
+
+Displays the currently connected Oracle user.
+
+    DESC Customer;
+
+Displays the structure of Customer table.
+
+    SELECT * FROM Customer;
+
+Displays all rows in Customer.
+
+    SELECT COUNT(*) FROM Customer;
+
+Displays the number of rows in Customer.
+
+    COMMIT;
+
+Permanently saves INSERT, UPDATE, and DELETE changes.
+
+    ROLLBACK;
+
+Cancels uncommitted INSERT, UPDATE, or DELETE changes.
+
+    CLEAR SCREEN;
+
+Clears the SQL*Plus screen (if supported by the terminal).
+
+    EXIT;
+
+Exits SQL*Plus.
+
+
+PART 6 - IMPORTANT VIVA QUESTIONS WITH EASY ANSWERS
+---------------------------------------------------
+
+1. What is a Primary Key?
+   A Primary Key uniquely identifies every record in a table. It cannot
+   contain NULL values or duplicate values.
+
+2. What is a Foreign Key?
+   A Foreign Key is a column that refers to the Primary Key of another
+   table. It maintains a relationship between tables.
+
+3. Why are Branch and Customer created before Account and Loan?
+   Because Account and Loan contain foreign keys referencing Branch and
+   Customer. Parent tables must exist first.
+
+4. What is the use of NOT NULL?
+   It ensures that a column must contain a value.
+
+5. What is the use of CHECK constraint?
+   It restricts values according to a condition. For example,
+   CHECK (balance >= 0) prevents a negative balance.
+
+6. What is the use of ORDER BY?
+   It sorts the result in ascending (ASC) or descending (DESC) order.
+
+7. What is the difference between WHERE and HAVING?
+   WHERE filters individual rows before grouping. HAVING filters groups
+   after GROUP BY.
+
+8. What is GROUP BY?
+   It groups rows having the same value, often to calculate SUM, AVG,
+   MAX, MIN, or COUNT for each group.
+
+9. What does MAX() do?
+   It returns the highest value in a group or result.
+
+10. What does AVG() do?
+    It calculates the average of numeric values.
+
+11. What is the use of LIKE?
+    LIKE is used for pattern matching in character data.
+
+12. What does '%a%' mean?
+    It matches text containing the letter 'a' anywhere.
+
+13. What does 'P%' mean?
+    It matches text starting with the letter P.
+
+14. What is NULL?
+    NULL represents a missing, unknown, or unavailable value. It is
+    different from zero or an empty string.
+
+15. Why do we use IS NULL instead of = NULL?
+    NULL cannot be compared using normal equality. Use IS NULL or
+    IS NOT NULL.
+
+16. Does SELECT balance + 500 modify the original balance?
+    No. It only calculates and displays a value. It does not update the
+    stored balance.
+
+17. What is the difference between SELECT and UPDATE?
+    SELECT retrieves data. UPDATE modifies existing data.
+
+18. What is COMMIT?
+    COMMIT permanently saves the current transaction changes.
+
+19. What is ROLLBACK?
+    ROLLBACK cancels changes that have not yet been committed.
+
+20. What is INTERSECT?
+    INTERSECT returns only the common rows from two SELECT statements.
+
+21. What is MINUS?
+    MINUS returns rows from the first SELECT that are absent from the
+    second SELECT.
+
+22. What is the difference between UNION and UNION ALL?
+    UNION combines results and removes duplicate rows. UNION ALL combines
+    results and keeps duplicates.
+
+23. Why can deleting a customer fail?
+    It can fail if Account or Loan contains a foreign key referencing that
+    customer's ID.
+
+24. What is a JOIN?
+    JOIN combines related rows from two or more tables using a condition.
+
+25. What is the purpose of a table constraint?
+    A constraint enforces rules on data and helps maintain accuracy and
+    integrity.
+
+
+PART 7 - QUICK EXECUTION ORDER FOR PRACTICAL EXAM
+-------------------------------------------------
+
+Follow this order in SQL*Plus:
+
+1. Connect:
+       sqlplus username/password
+
+2. Enable output:
+       SET SERVEROUTPUT ON;
+
+3. Create tables in this order:
+       Branch
+       Customer
+       Account
+       Loan
+
+4. Insert records in this order:
+       Branch
+       Customer
+       Account
+       Loan
+
+5. Save:
+       COMMIT;
+
+6. Verify all four tables and record counts.
+
+7. Execute Queries 1 to 7.
+
+8. Execute Query 8 (UPDATE), then COMMIT and verify.
+
+9. Execute Query 9 (DELETE), then COMMIT and verify.
+
+10. Execute Query 10(a) INTERSECT and Query 10(b) MINUS.
+
+11. Exit:
+       EXIT;
+
+
+END OF PROBLEM STATEMENT 14
+===========================

@@ -1,0 +1,217 @@
+PROBLEM STATEMENT 13 - MONGODB STUDENT COLLECTION Ubuntu Practical -
+Complete Commands in Execution Sequence
+
+PROBLEM: Consider the student collection with attributes:
+student(roll_no, sname, dept, marks)
+
+Create a database named Student and a student collection in MongoDB.
+Insert suitable data and perform the given queries.
+
+============================================================ STEP 1:
+START MONGODB (UBUNTU TERMINAL)
+============================================================
+
+sudo systemctl start mongod
+
+Check MongoDB status:
+
+sudo systemctl status mongod
+
+If the status shows “active (running)”, MongoDB is running. Press q to
+exit the status screen.
+
+============================================================ STEP 2:
+OPEN MONGODB SHELL
+============================================================
+
+mongosh
+
+You should see a prompt similar to:
+
+test>
+
+NOTE: All commands from Step 3 onwards are written inside mongosh, not
+in the normal Ubuntu terminal.
+
+============================================================ STEP 3:
+CREATE / SELECT DATABASE
+============================================================
+
+use Student
+
+Expected message:
+
+switched to db Student
+
+NOTE: MongoDB creates the database physically after data is stored in
+it.
+
+============================================================ STEP 4:
+INSERT SUITABLE STUDENT RECORDS
+============================================================
+
+db.student.insertMany([ {roll_no: 1, sname: “Shreya”, dept: “Computer”,
+marks: 85}, {roll_no: 2, sname: “Priya”, dept: “IT”, marks: 75},
+{roll_no: 3, sname: “Rahul”, dept: “Computer”, marks: 90}, {roll_no: 4,
+sname: “Amit”, dept: “IT”, marks: 35}, {roll_no: 5, sname: “Sneha”,
+dept: “Computer”, marks: 65}, {roll_no: 6, sname: “Neha”, dept: “ENTC”,
+marks: 88}, {roll_no: 7, sname: “Karan”, dept: “IT”, marks: 55},
+{roll_no: 8, sname: “Pooja”, dept: “Computer”, marks: 30}, {roll_no: 9,
+sname: “Rohan”, dept: “ENTC”, marks: 95}, {roll_no: 10, sname: “Anjali”,
+dept: “IT”, marks: 82}])
+
+To display all inserted records:
+
+db.student.find()
+
+For formatted output:
+
+db.student.find().pretty()
+
+============================================================ STEP 5:
+PERFORM THE GIVEN QUERIES
+============================================================
+
+Q1. Display the information of all students.
+
+db.student.find()
+
+Q2. Display the information of students belonging to the Computer
+department.
+
+db.student.find({dept: “Computer”})
+
+Q3. Display the information of students belonging to the Computer OR IT
+department using a logical operator.
+
+db.student.find({ $or: [ {dept: “Computer”}, {dept: “IT”} ] })
+
+Q4. Display the information of students whose marks are greater than 70.
+
+db.student.find({marks: {$gt: 70}})
+
+Q5. Display the information of students whose marks are greater than or
+equal to 80 AND who belong to the Computer department.
+
+db.student.find({ marks: {$gte: 80}, dept: “Computer” })
+
+NOTE: When multiple conditions are written in the same query object,
+MongoDB applies AND by default.
+
+Q6. Display the information of students whose marks are less than 40 OR
+who belong to the IT department.
+
+db.student.find({ $or: [
+        {marks: {$lt: 40}}, {dept: “IT”} ] })
+
+Q7. Display the information of students whose marks are between 40 and
+80 (including 40 and 80).
+
+db.student.find({ marks: {$gte: 40, $lte: 80} })
+
+Q8. Display the information of students whose department is NOT IT.
+
+db.student.find({ dept: {$ne: “IT”} })
+
+Q9. Display the total marks of students in each department.
+
+db.student.aggregate([ { $group: {
+            _id: "$dept”, total_marks: {$sum: "$marks”} } }])
+
+Expected totals for the sample data (the order may differ):
+
+Computer = 270 IT = 247 ENTC = 183
+
+EXPLANATION: aggregate() performs aggregation operations.
+$group groups documents by department.
+_id: "$dept” groups records using the dept field. $sum: "$marks” adds
+the marks of students in each group.
+
+Q10. Create an index on the sname field and drop the index created on
+the sname field.
+
+A. Create index:
+
+db.student.createIndex({sname: 1})
+
+B. Display indexes:
+
+db.student.getIndexes()
+
+C. Drop the index:
+
+db.student.dropIndex({sname: 1})
+
+NOTE: 1 means ascending index order. The default id index is not removed
+by this command.
+
+============================================================ STEP 6:
+USEFUL COMMANDS
+============================================================
+
+Display the current database:
+
+db
+
+Display available databases:
+
+show dbs
+
+Display collections in the current database:
+
+show collections
+
+Display all student records:
+
+db.student.find()
+
+Count student records:
+
+db.student.countDocuments()
+
+Exit MongoDB Shell:
+
+exit
+
+============================================================ STEP 7:
+IMPORTANT MONGODB OPERATORS
+============================================================
+
+gt = Greaterthangte = Greater than or equal to lt = Lessthanlte = Less
+than or equal to ne = Notequaltoor = OR condition and = ANDconditionsum
+= Addition / total $group = Group documents
+
+============================================================ STEP 8:
+IMPORTANT COMMANDS TO REMEMBER
+============================================================
+
+use Student - Select or create database db.student.insertMany() - Insert
+multiple documents db.student.find() - Display documents
+db.student.aggregate() - Perform aggregation group − Groupdocumentssum -
+Calculate total createIndex() - Create an index getIndexes() - Display
+indexes dropIndex() - Remove an index
+
+============================================================ EXECUTION
+ORDER FOR PRACTICAL EXAM
+============================================================
+
+1.  Open Ubuntu Terminal.
+2.  Run: sudo systemctl start mongod
+3.  Run: mongosh
+4.  Run: use Student
+5.  Execute the insertMany() command.
+6.  Execute Q1 to Q9 one by one.
+7.  For Q10, create the index, display indexes, and drop it.
+8.  Run: exit
+
+IMPORTANT NOTES: - Do not type mongosh commands in the normal Ubuntu
+terminal. First enter mongosh; then type database commands at its
+prompt. - The collection is automatically created when insertMany()
+inserts the first documents. - If you run insertMany() again, duplicate
+sample records may be inserted. For a fresh practice run, you can first
+run: db.student.drop() Then execute the insertMany() command again. - Do
+not run db.student.drop() during the exam unless you intentionally want
+to delete the collection and its records.
+
+============================================================ END OF
+PRACTICAL ============================================================

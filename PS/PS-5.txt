@@ -1,0 +1,247 @@
+PROBLEM STATEMENT 5 – PL/SQL FUNCTION TO CALCULATE AREA OF A CIRCLE
+Ubuntu Terminal + Docker Oracle + SQL*Plus
+
+OBJECTIVE
+Write a PL/SQL function to calculate the area of a circle for radius values
+from 5 to 9, and store each radius and its calculated area in a table
+named AREAS.
+
+FORMULA
+Area = 3.14 * radius * radius
+
+============================================================
+1. UBUNTU TERMINAL COMMANDS
+============================================================
+
+Step 1: Open Ubuntu Terminal.
+
+Step 2: Check Docker containers:
+    docker ps -a
+
+Step 3: Start your Oracle container:
+    docker start CONTAINER_ID_OR_NAME
+
+Replace CONTAINER_ID_OR_NAME with your actual Oracle container ID or name.
+
+Step 4: Connect to Oracle SQL*Plus:
+    docker exec -it CONTAINER_ID_OR_NAME sqlplus system/PASSWORD
+
+Replace CONTAINER_ID_OR_NAME and PASSWORD with your actual container
+name/ID and Oracle password. Use the Oracle username configured for
+your practical if it is not SYSTEM.
+
+After connecting, wait until you see:
+    SQL>
+
+NOTE:
+SET SERVEROUTPUT ON is NOT required for this program because it does not
+use DBMS_OUTPUT.PUT_LINE. It is needed when you want to display messages
+using DBMS_OUTPUT.PUT_LINE.
+
+============================================================
+2. COMPLETE SQL / PL/SQL PROGRAM
+============================================================
+
+Run these commands in SQL*Plus, in this order.
+
+A. Create the empty table:
+
+    CREATE TABLE areas (
+        radius NUMBER,
+        area NUMBER(10,2)
+    );
+
+B. Create the function:
+
+    CREATE OR REPLACE FUNCTION calculate_area(r NUMBER)
+    RETURN NUMBER
+    IS
+    BEGIN
+        RETURN 3.14 * r * r;
+    END;
+    /
+
+C. Insert values for radius 5 to 9 using a FOR LOOP:
+
+    BEGIN
+        FOR i IN 5..9 LOOP
+            INSERT INTO areas VALUES (i, calculate_area(i));
+        END LOOP;
+
+        COMMIT;
+    END;
+    /
+
+D. Display the stored records:
+
+    SELECT * FROM areas;
+
+IMPORTANT:
+- The slash (/) on a line by itself executes the stored function or
+  PL/SQL block in SQL*Plus.
+- CREATE TABLE should be run only once. If the table already exists from
+  an earlier attempt, remove it before recreating it:
+
+    DROP TABLE areas;
+
+- Do not run DROP TABLE unless you want to remove the existing AREAS table
+  and its data.
+- If the function already exists, CREATE OR REPLACE FUNCTION replaces it.
+
+============================================================
+3. EXPECTED OUTPUT
+============================================================
+
+After running SELECT * FROM areas, the values should be approximately:
+
+    RADIUS       AREA
+    ----------   ----------
+         5         78.50
+         6        113.04
+         7        153.86
+         8        200.96
+         9        254.34
+
+    5 rows selected.
+
+The exact display formatting may differ depending on SQL*Plus settings.
+
+============================================================
+4. EXPLANATION OF IMPORTANT CODE
+============================================================
+
+CREATE TABLE areas:
+Creates a table named AREAS.
+
+radius NUMBER:
+Stores the radius.
+
+area NUMBER(10,2):
+Stores the calculated area with up to 2 digits after the decimal point.
+
+CREATE OR REPLACE FUNCTION:
+Creates the function, or replaces it if it already exists.
+
+calculate_area(r NUMBER):
+The function is named CALCULATE_AREA and accepts radius r as input.
+
+RETURN NUMBER:
+Declares that the function returns a numeric value.
+
+IS:
+Begins the declaration section of the function.
+
+BEGIN:
+Starts the executable statements.
+
+RETURN 3.14 * r * r:
+Calculates the area and returns the result.
+
+END:
+Ends the function.
+
+FOR i IN 5..9 LOOP:
+Repeats the statements for i = 5, 6, 7, 8, and 9.
+
+INSERT INTO areas VALUES (i, calculate_area(i)):
+Stores the radius and the result returned by the function in the table.
+
+COMMIT:
+Saves the inserted records permanently.
+
+SELECT * FROM areas:
+Displays all records in the AREAS table.
+
+============================================================
+5. WHY RETURN IS USED
+============================================================
+
+There are two RETURN statements/uses in the function:
+
+1. RETURN NUMBER
+   Specifies the datatype of the value that the function will return.
+
+2. RETURN 3.14 * r * r
+   Calculates the area and sends the calculated numeric value back
+   to the calling statement.
+
+Example:
+    calculate_area(5)
+
+Calculation:
+    3.14 * 5 * 5 = 78.5
+
+The function returns 78.5.
+
+============================================================
+6. SET SERVEROUTPUT ON – IS IT REQUIRED?
+============================================================
+
+For this program: NO.
+
+SET SERVEROUTPUT ON is used when the program uses:
+    DBMS_OUTPUT.PUT_LINE('message');
+
+This program uses INSERT INTO and SELECT, so SET SERVEROUTPUT ON is
+not necessary.
+
+============================================================
+7. EASY WAY TO REMEMBER THE PROGRAM
+============================================================
+
+Remember this sequence:
+
+    TABLE -> FUNCTION -> LOOP -> INSERT -> COMMIT -> SELECT
+
+1. TABLE: Create the table with radius and area columns.
+2. FUNCTION: Accept radius and return the calculated area.
+3. LOOP: Repeat for radius values 5 to 9.
+4. INSERT: Store radius and calculated area.
+5. COMMIT: Save the records.
+6. SELECT: Display the records.
+
+============================================================
+8. IMPORTANT VIVA QUESTIONS AND ANSWERS
+============================================================
+
+Q1. What is PL/SQL?
+Ans. PL/SQL is Oracle's procedural extension of SQL.
+
+Q2. What is a function?
+Ans. A function is a named block of code that returns a value.
+
+Q3. Why do we use a function?
+Ans. To perform a specific task and reuse the code.
+
+Q4. Why do we use RETURN NUMBER?
+Ans. It specifies that the function returns a numeric value.
+
+Q5. What is a parameter?
+Ans. A parameter is a value passed to a function.
+
+Q6. What is a FOR LOOP?
+Ans. It repeats statements for a specified number of times.
+
+Q7. Why do we use INSERT INTO?
+Ans. To insert records into a table.
+
+Q8. What is COMMIT?
+Ans. It saves database changes permanently.
+
+Q9. What is the difference between a function and a procedure?
+Ans. A function must return a value, whereas a procedure does not have
+to return a value.
+
+Q10. What is the slash (/) in SQL*Plus?
+Ans. It executes the PL/SQL block or stored program in the SQL buffer.
+
+Q11. What is NUMBER(10,2)?
+Ans. It allows up to 10 digits in total, with 2 digits after the decimal
+point.
+
+Q12. Why is SET SERVEROUTPUT ON not required here?
+Ans. Because the program does not use DBMS_OUTPUT.PUT_LINE.
+
+============================================================
+END OF PRACTICAL NOTES
+============================================================

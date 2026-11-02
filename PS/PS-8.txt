@@ -1,0 +1,305 @@
+DBMS PRACTICAL - PROBLEM STATEMENT 8 MYSQL DATABASE CONNECTIVITY USING
+PYTHON Ubuntu - Step-by-Step Commands, SQL Queries and Python Code
+
+============================================================ 1. INSTALL
+PYTHON ============================================================
+
+Open Ubuntu Terminal and run:
+
+sudo apt update sudo apt install python3
+
+============================================================ 2. INSTALL
+MYSQL CONNECTOR FOR PYTHON
+============================================================
+
+sudo apt install python3-mysql.connector
+
+This package allows Python to communicate with MySQL.
+
+============================================================ 3. START
+MYSQL SERVER
+============================================================
+
+sudo systemctl start mysql
+
+Open MySQL:
+
+sudo mysql
+
+You should now see the MySQL prompt:
+
+mysql>
+
+============================================================ 4. CREATE
+DATABASE AND TABLE
+============================================================
+
+Run these SQL commands inside MySQL:
+
+CREATE DATABASE college;
+
+USE college;
+
+CREATE TABLE student ( id INT PRIMARY KEY, name VARCHAR(30), city
+VARCHAR(30) );
+
+Check that the table was created:
+
+SHOW TABLES;
+
+============================================================ 5. CREATE A
+MYSQL USER FOR PYTHON
+============================================================
+
+While still inside MySQL, run:
+
+CREATE USER ‘student’@‘localhost’ IDENTIFIED BY ‘1234’;
+
+GRANT ALL PRIVILEGES ON college.* TO ‘student’@‘localhost’;
+
+FLUSH PRIVILEGES;
+
+Exit MySQL:
+
+EXIT;
+
+NOTE: The Python program below connects using username student and
+password 1234. If the user already exists, do not create it again. If
+needed, use: ALTER USER ‘student’@‘localhost’ IDENTIFIED BY ‘1234’;
+
+============================================================ 6. CREATE
+THE PYTHON FILE
+============================================================
+
+In Ubuntu Terminal, run:
+
+nano db.py
+
+============================================================ 7. COMPLETE
+PYTHON PROGRAM
+============================================================
+
+Copy the following code into db.py:
+
+import mysql.connector
+
+con = mysql.connector.connect( host=“localhost”, user=“student”,
+password=“1234”, database=“college” )
+
+cur = con.cursor()
+
+while True: print(“\n1. Add Student”) print(“2. Display Students”)
+print(“3. Edit Student”) print(“4. Delete Student”) print(“5. Exit”)
+
+    ch = int(input("Enter choice: "))
+
+    if ch == 1:
+        id = int(input("Enter ID: "))
+        name = input("Enter Name: ")
+        city = input("Enter City: ")
+
+        cur.execute("INSERT INTO student VALUES (%s,%s,%s)",
+                    (id, name, city))
+        con.commit()
+        print("Record Added")
+
+    elif ch == 2:
+        cur.execute("SELECT * FROM student")
+        for row in cur.fetchall():
+            print(row)
+
+    elif ch == 3:
+        id = int(input("Enter ID: "))
+        name = input("Enter New Name: ")
+        city = input("Enter New City: ")
+
+        cur.execute("UPDATE student SET name=%s, city=%s WHERE id=%s",
+                    (name, city, id))
+        con.commit()
+        print("Record Updated")
+
+    elif ch == 4:
+        id = int(input("Enter ID: "))
+
+        cur.execute("DELETE FROM student WHERE id=%s", (id,))
+        con.commit()
+        print("Record Deleted")
+
+    elif ch == 5:
+        break
+
+    else:
+        print("Invalid Choice")
+
+con.close()
+
+============================================================ 8. SAVE THE
+PYTHON FILE ============================================================
+
+After pasting the code in nano:
+
+1.  Press CTRL + O
+2.  Press Enter
+3.  Press CTRL + X
+
+============================================================ 9. RUN THE
+PROGRAM ============================================================
+
+In the terminal, run:
+
+python3 db.py
+
+The menu will appear:
+
+1.  Add Student
+2.  Display Students
+3.  Edit Student
+4.  Delete Student
+5.  Exit
+
+Enter choice:
+
+============================================================ 10. TEST
+THE PROGRAM ============================================================
+
+A. ADD STUDENT
+
+Choose 1 and enter:
+
+Enter choice: 1 Enter ID: 1 Enter Name: Shreya Enter City: Pune
+
+Expected message:
+
+Record Added
+
+B. DISPLAY STUDENTS
+
+Choose 2:
+
+Enter choice: 2
+
+Example output:
+
+(1, ‘Shreya’, ‘Pune’)
+
+C. EDIT STUDENT
+
+Choose 3 and enter:
+
+Enter choice: 3 Enter ID: 1 Enter New Name: Priya Enter New City: Mumbai
+
+Expected message:
+
+Record Updated
+
+D. DELETE STUDENT
+
+Choose 4 and enter:
+
+Enter choice: 4 Enter ID: 1
+
+Expected message:
+
+Record Deleted
+
+E. EXIT
+
+Choose 5:
+
+Enter choice: 5
+
+The program ends and closes the database connection.
+
+============================================================ 11. SQL
+QUERIES USED IN THE PROGRAM
+============================================================
+
+INSERT - Add a record:
+
+INSERT INTO student VALUES (%s, %s, %s);
+
+SELECT - Display all records:
+
+SELECT * FROM student;
+
+UPDATE - Edit a record:
+
+UPDATE student SET name = %s, city = %s WHERE id = %s;
+
+DELETE - Delete a record:
+
+DELETE FROM student WHERE id = %s;
+
+============================================================ 12.
+IMPORTANT MYSQL COMMANDS
+============================================================
+
+Open MySQL:
+
+sudo mysql
+
+Create database:
+
+CREATE DATABASE college;
+
+Select database:
+
+USE college;
+
+Create table:
+
+CREATE TABLE student ( id INT PRIMARY KEY, name VARCHAR(30), city
+VARCHAR(30) );
+
+Display tables:
+
+SHOW TABLES;
+
+Display table structure:
+
+DESC student;
+
+Display all records:
+
+SELECT * FROM student;
+
+Exit MySQL:
+
+EXIT;
+
+============================================================ 13.
+IMPORTANT PYTHON COMMANDS AND MEANINGS
+============================================================
+
+import mysql.connector Imports the MySQL connector library.
+
+mysql.connector.connect(…) Connects Python to the MySQL database.
+
+con.cursor() Creates a cursor object.
+
+cur.execute(…) Executes an SQL query.
+
+con.commit() Saves INSERT, UPDATE and DELETE changes.
+
+cur.fetchall() Retrieves all remaining rows from a query result.
+
+con.close() Closes the database connection.
+
+while True Repeats the menu.
+
+break Exits the loop.
+
+============================================================ 14. CRUD
+QUICK REVISION
+============================================================
+
+C - CREATE - INSERT - Add records R - READ - SELECT - Display records
+U - UPDATE - UPDATE - Edit records D - DELETE - DELETE - Remove records
+
+IMPORTANT: Use con.commit() after INSERT, UPDATE and DELETE so that the
+changes are saved in the database.
+
+The %s symbols are parameter placeholders used by the MySQL Connector.
+The values are supplied separately as a tuple.
+
+END OF PRACTICAL PROGRAM
